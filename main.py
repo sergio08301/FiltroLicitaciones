@@ -6,11 +6,12 @@ import re
 from licitacion import Licitacion
 from datetime import datetime, timedelta
 from email.utils import parsedate_to_datetime
+from bs4 import BeautifulSoup
 
 #Configuración
-dias= 3                                                 #dias que puede ir atrás en correo para buscar licitaciones
+dias= 3                                                #dias que puede ir atrás en correo para buscar licitaciones
 asunto= "Correu diari de subscriptors generals"         #Asunto que quieres buscar en los correos
-
+colorEmpleador="#660303"                                #Color en el cual esta escrito el empleador en el correo
 
 # Cargar variables de entorno (.env)
 load_dotenv()
@@ -62,47 +63,74 @@ def buscar_correo_por_asunto(mail, asunto_buscado):
     print("⚠️ No se encontró ningún correo con ese asunto.")
     return None
 
-def extraer_cuerpo_texto(mensaje):
-    cuerpo = ""
+def eliminar_encabezado_reenviado(texto):
+    lineas = texto.splitlines()
+    resultado = []
+    saltando = False
+    for linea in lineas:
+        if any(linea.strip().lower().startswith(prefix) for prefix in ["de:", "enviado el:", "para:", "asunto:"]):
+            saltando = True
+            continue
+        if saltando and linea.strip() == "":
+            saltando = False
+            continue
+        if not saltando:
+            resultado.append(linea)
+    return "\n".join(resultado)
 
+def extraer_html_del_mensaje(mensaje):
     if mensaje.is_multipart():
         for part in mensaje.walk():
-            content_type = part.get_content_type()
-            content_disposition = str(part.get("Content-Disposition"))
+            if part.get_content_type() == "text/html":
+                html = part.get_payload(decode=True).decode(errors="ignore")
+                return html
+    return None
 
-            if content_type == "text/plain" and "attachment" not in content_disposition:
-                payload = part.get_payload(decode=True)
-                if payload:
-                    cuerpo += payload.decode(errors="ignore")
-    else:
-        payload = mensaje.get_payload(decode=True)
-        if payload:
-            cuerpo = payload.decode(errors="ignore")
+def extraer_licitaciones_desde_html(html: str) -> list:
+    soup = BeautifulSoup(html, "html.parser")
+    licitaciones = []
+    empleador_actual = None
 
-    return cuerpo.strip()
+    for tag in soup.find_all():
+        # 🟥 Detectar empleador por color rojo exacto
+        if tag.name in ["b", "strong"] and tag.find("span", style=lambda s: s and colorEmpleador in s.lower()):
+            empleador_actual = tag.get_text(strip=True)
 
-def limpiar_cuerpo(cuerpo: str) -> str:
-    # Definir marcadores
-    inicio_clave = "Serveis"
-    fin_clave = "Si voleu modificar la subscripció"
+        # 🔗 Detectar enlaces de licitación válidos únicamente
+        elif tag.name == "a" and "href" in tag.attrs:
+            enlace = tag["href"]
 
-    # Encontrar índices
-    inicio_idx = cuerpo.find(inicio_clave)
-    fin_idx = cuerpo.find(fin_clave)
+            # ✅ Solo procesar enlaces válidos de licitaciones
+            if not enlace.startswith("https://contractaciopublica.cat/ca/detall-publicacio/estado/"):
+                continue  # Saltar enlaces tipo "feu clic aquí"
 
-    # Si ambos marcadores existen, recortar entre ellos
-    if inicio_idx != -1 and fin_idx != -1:
-        # Excluir la frase de inicio sumando su longitud
-        cuerpo_limpio = cuerpo[inicio_idx + len(inicio_clave):fin_idx].strip()
-    else:
-        cuerpo_limpio = cuerpo.strip()
+            titulo = tag.get_text(strip=True)
 
-    return cuerpo_limpio
+            # Obtener los siguientes <p> con info adicional
+            siguiente_info = tag.find_parent("p").find_next_siblings("p", limit=3)
+            fecha_publicacion, fecha_limite, presupuesto = "", "", ""
 
+            for p in siguiente_info:
+                texto = p.get_text(strip=True).lower()
+                if "data de publicació" in texto:
+                    fecha_publicacion = texto.split(":", 1)[1].strip()
+                elif "termini de presentació" in texto:
+                    fecha_limite = texto.split(":", 1)[1].strip()
+                elif "pressupost de licitació" in texto:
+                    presupuesto = texto.split(":", 1)[1].strip()
 
-import re
-from licitacion import Licitacion
+            lic = Licitacion(
+                empleador=empleador_actual or "",
+                titulo=titulo,
+                enlace=enlace,
+                fecha_publicacion=fecha_publicacion,
+                fecha_limite=fecha_limite,
+                presupuesto=presupuesto
+            )
 
+            licitaciones.append(lic)
+
+    return licitaciones
 
 def parsear_licitaciones(texto):
     # Dividir el texto en bloques de licitaciones (separados por 2+ saltos de línea)
@@ -152,19 +180,33 @@ def parsear_licitaciones(texto):
 
     return licitaciones
 
+
+def filtrado_inicial(licitaciones: list) -> list:
+
+    #TODO Meter los primeros filtros, como la fecha o el importe insuficientes
+
+    return licitaciones
+
+
 def main():
+    #Encontrar el correo
     mail = connect_to_email()
     mensaje = buscar_correo_por_asunto(mail, asunto)
     mail.logout()
-    cuerpo = extraer_cuerpo_texto(mensaje)
-    cuerpo_limpio = limpiar_cuerpo(cuerpo)
-    print(cuerpo_limpio)
-    #licitaciones = parsear_licitaciones(cuerpo_limpio)
-    #print(f"\nSe encontraron {len(licitaciones)} licitaciones:\n")
-    #for idx, lic in enumerate(licitaciones, 1):
-    #    print(f"=== LICITACIÓN {idx} ===")
-    #    print(lic.to_print())
-    #    print("\n" + "=" * 50 + "\n")
+    if not mensaje:
+        print("❌ No se encontró ningún correo reciente con ese asunto.")
+        return
+
+    html = extraer_html_del_mensaje(mensaje)
+    if html:
+        licitaciones = extraer_licitaciones_desde_html(html)
+        print(f"\n📋 Se detectaron {len(licitaciones)} licitaciones desde HTML:")
+
+    licitaciones_filtradas = filtrado_inicial(licitaciones)
+    print(f"\n📋 Se detectaron {len(licitaciones_filtradas)} licitaciones desde HTML:")
+    for i, lic in enumerate(licitaciones_filtradas, 1):
+        print(f"\n🔹 Licitación {i}:")
+        print(lic.to_print())
 
 if __name__ == "__main__":
     main()
