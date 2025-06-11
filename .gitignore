@@ -1,0 +1,23 @@
+# Entorno virtual
+venv/
+
+# Configuración de PyCharm / IntelliJ
+.idea/
+
+# Archivos bytecode y temporales de Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Archivos de entorno / configuración local
+.env
+
+# Archivos de logs o debug
+*.log
+
+# Jupyter notebooks checkpoints (por si acaso)
+.ipynb_checkpoints/
+
+# VS Code settings (si usas VSCode también)
+.vscode/
