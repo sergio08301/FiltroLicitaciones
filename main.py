@@ -7,6 +7,13 @@ from licitacion import Licitacion
 from datetime import datetime, timedelta
 from email.utils import parsedate_to_datetime
 from bs4 import BeautifulSoup
+import requests
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.by import By
+import shutil
+import time
 
 #Configuración
 dias= 3                                                #dias que puede ir atrás en correo para buscar licitaciones
@@ -187,6 +194,227 @@ def filtrado_inicial(licitaciones: list) -> list:
 
     return licitaciones
 
+def descargar_pdfs_licitacion(licitacion: Licitacion, carpeta_destino: str = "pdfs"):
+    url = licitacion.GetEnlace()
+    headers = {"User-Agent": "Mozilla/5.0"}
+
+    try:
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+    except Exception as e:
+        print(f"❌ Error al acceder a {url}: {e}")
+        return
+
+    soup = BeautifulSoup(response.text, "html.parser")
+
+    # Crear carpeta si no existe
+    os.makedirs(carpeta_destino, exist_ok=True)
+
+    pdf_links = soup.find_all("a", href=True)
+    encontrados = 0
+
+    for link in pdf_links:
+        texto = link.get_text(strip=True).lower()
+        href = link["href"]
+
+        # Filtro por nombre asociado a los PDF deseados
+        if "administratives" in texto or "prescripcions tècniques" in texto:
+            nombre_pdf = texto.replace(" ", "_").replace("/", "_") + ".pdf"
+
+            if not href.startswith("http"):
+                href = "https://contractaciopublica.cat" + href  # enlace relativo
+
+            ruta_pdf = os.path.join(carpeta_destino, nombre_pdf)
+
+            try:
+                pdf_data = requests.get(href, headers=headers)
+                with open(ruta_pdf, "wb") as f:
+                    f.write(pdf_data.content)
+                print(f"✅ PDF descargado: {nombre_pdf}")
+                encontrados += 1
+            except Exception as e:
+                print(f"❌ Error al descargar {href}: {e}")
+
+    if encontrados == 0:
+        print("⚠️ No se encontraron PDFs relevantes en esta licitación.")
+
+
+def descargar_pdfs_con_selenium(licitacion: Licitacion, carpeta_destino: str = "pdfs"):
+    enlace = licitacion.GetEnlace()
+
+    chrome_options = Options()
+    chrome_options.add_argument("--headless")  # para que no abra ventana
+    chrome_options.add_argument("--disable-gpu")
+    chrome_options.add_argument("--no-sandbox")
+
+    driver = webdriver.Chrome(options=chrome_options)
+    driver.get(enlace)
+
+    # Esperar que cargue el contenido JS
+    time.sleep(3)
+
+    os.makedirs(carpeta_destino, exist_ok=True)
+    encontrados = 0
+
+    try:
+        links = driver.find_elements(By.TAG_NAME, "a")
+        for link in links:
+            texto = link.text.lower()
+            if "administratives" in texto or "prescripcions tècniques" in texto:
+                href = link.get_attribute("href")
+                if href and href.endswith(".pdf"):
+                    nombre = texto.replace(" ", "_").replace("/", "_") + ".pdf"
+                    ruta = os.path.join(carpeta_destino, nombre)
+                    try:
+                        r = requests.get(href)
+                        with open(ruta, "wb") as f:
+                            f.write(r.content)
+                        print(f"✅ PDF descargado: {nombre}")
+                        encontrados += 1
+                    except Exception as e:
+                        print(f"❌ Error al descargar {href}: {e}")
+    finally:
+        driver.quit()
+
+    if encontrados == 0:
+        print("⚠️ No se encontraron PDFs en esta licitación.")
+
+
+def descargar_pdfs_clickando_selectivamente(licitacion, carpeta_destino="pdfs", carpeta_temp="tmp_descargas"):
+    url = licitacion.GetEnlace()
+    nombre_base = licitacion.GetTitulo().replace(" ", "_").replace("/", "_")
+
+    os.makedirs(carpeta_destino, exist_ok=True)
+    os.makedirs(carpeta_temp, exist_ok=True)
+
+    chrome_options = Options()
+    chrome_options.add_argument("--headless")
+    chrome_options.add_argument("--disable-gpu")
+    chrome_options.add_argument("--no-sandbox")
+    chrome_options.add_experimental_option("prefs", {
+        "download.default_directory": os.path.abspath(carpeta_temp),
+        "download.prompt_for_download": False,
+        "plugins.always_open_pdf_externally": True
+    })
+
+    driver = webdriver.Chrome(options=chrome_options)
+    driver.get(url)
+    time.sleep(3)
+
+    claves_buscadas = [
+        "plec de clàusules administratives",
+        "plec de prescripcions tècniques"
+    ]
+
+    encontrados = 0
+    try:
+        rows = driver.find_elements(By.CLASS_NAME, "row")
+
+        for row in rows:
+            label_div = row.find_element(By.CLASS_NAME, "col-md-4")
+            label_text = label_div.text.strip().lower()
+
+            if any(clave in label_text for clave in claves_buscadas):
+                try:
+                    button_div = row.find_element(By.CLASS_NAME, "col-md-8")
+                    enlaces = button_div.find_elements(By.TAG_NAME, "a")
+                    if not enlaces:
+                        print(f"⚠️ No se encontró enlace PDF en: {label_text}")
+                        continue
+                    enlace = enlaces[0]
+                    href = enlace.get_attribute("href")
+                    encontrados += 1
+                    time.sleep(2)  # espera a que descargue
+                except Exception as e:
+                    print(f"❌ No se pudo hacer clic en el botón de: {label_text} → {e}")
+
+        time.sleep(4)  # espera adicional
+    finally:
+        driver.quit()
+
+    # Mover PDFs a carpeta final
+    for filename in os.listdir(carpeta_temp):
+        if filename.lower().endswith(".pdf"):
+            destino = os.path.join(carpeta_destino, f"{nombre_base}__{filename}")
+            origen = os.path.join(carpeta_temp, filename)
+            shutil.move(origen, destino)
+            print(f"✅ Guardado: {destino}")
+
+    if encontrados == 0:
+        print("⚠️ No se encontraron documentos administrativos o técnicos.")
+
+    shutil.rmtree(carpeta_temp, ignore_errors=True)
+
+def descargar_pdfs_por_href(licitacion, carpeta_destino="pdfs"):
+    url = licitacion.GetEnlace()
+    nombre_base = licitacion.GetTitulo().replace(" ", "_").replace("/", "_")
+
+    os.makedirs(carpeta_destino, exist_ok=True)
+
+    chrome_options = Options()
+    chrome_options.add_argument("--headless")
+    chrome_options.add_argument("--disable-gpu")
+    chrome_options.add_argument("--no-sandbox")
+
+    driver = webdriver.Chrome(options=chrome_options)
+    driver.get(url)
+    time.sleep(3)  # permitir que cargue el DOM
+
+    claves_buscadas = [
+        "plec de clàusules administratives",
+        "plec de prescripcions tècniques"
+    ]
+
+    contador = 1        #Eliminar mas tarde cuando se decida como guardar los pdfs
+
+    encontrados = 0
+
+    try:
+        rows = driver.find_elements(By.CLASS_NAME, "row")
+
+        for row in rows:
+            try:
+                label_div = row.find_element(By.CLASS_NAME, "col-md-4")
+                label_text = label_div.text.strip().lower()
+
+                if any(clave in label_text for clave in claves_buscadas):
+                    link_div = row.find_element(By.CLASS_NAME, "col-md-8")
+                    enlaces = link_div.find_elements(By.TAG_NAME, "a")
+
+                    if not enlaces:
+                        print(f"⚠️ No se encontró enlace PDF en: {label_text}")
+                        continue
+
+                    enlace = enlaces[0]
+                    href = enlace.get_attribute("href")
+                    texto_link = enlace.text.strip()
+
+                    if href:
+                        nombre = f"{contador}.pdf"
+                        destino = os.path.join(carpeta_destino, nombre)
+
+                        try:
+                            headers = {
+                                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+                            }
+                            r = requests.get(href, headers=headers)
+                            with open(destino, "wb") as f:
+                                f.write(r.content)
+                            print(f"✅ PDF guardado como {nombre}")
+                            contador += 1
+                            encontrados += 1
+                        except Exception as e:
+                            print(f"❌ Error al descargar desde {href}: {e}")
+            except Exception:
+                continue
+
+    finally:
+        driver.quit()
+
+    if encontrados == 0:
+        print("⚠️ No se encontró ningún documento técnico o administrativo.")
+
+
 
 def main():
     #Encontrar el correo
@@ -207,6 +435,12 @@ def main():
     for i, lic in enumerate(licitaciones_filtradas, 1):
         print(f"\n🔹 Licitación {i}:")
         print(lic.to_print())
+
+    print(licitaciones[0].to_print())
+    #descargar_pdfs_con_selenium(licitaciones[0])
+    #descargar_pdfs_clickando_selectivamente(licitaciones[0])
+    descargar_pdfs_por_href(licitaciones[0])
+
 
 if __name__ == "__main__":
     main()

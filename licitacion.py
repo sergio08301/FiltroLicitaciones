@@ -1,11 +1,13 @@
 class Licitacion:
-    def __init__(self, empleador, titulo, enlace, fecha_publicacion, fecha_limite, presupuesto):
+    def __init__(self, empleador, titulo, enlace, fecha_publicacion, fecha_limite, presupuesto, administratives, tecniques):
         self._empleador = empleador.strip()
         self._titulo = titulo.strip()
         self._enlace = enlace.strip()
         self._fecha_publicacion = fecha_publicacion.strip()
         self._fecha_limite = fecha_limite.strip()
         self._presupuesto = presupuesto.strip()
+        self._administratives= administratives.strip()
+        self._tecniques=tecniques.strip();
 
     # Getters
     def GetEmpleador(self):
@@ -26,6 +28,12 @@ class Licitacion:
     def GetPresupuesto(self):
         return self._presupuesto
 
+    def GetAdministratives(self):
+        return self._administratives
+
+    def GetTecniques(self):
+        return self._tecniques
+
     # Setters
     def SetEmpleador(self, nuevo_empleador):
         self._empleador = nuevo_empleador
@@ -45,6 +53,12 @@ class Licitacion:
     def setPresupuesto(self, nuevo_presupuesto):
         self._presupuesto = nuevo_presupuesto
 
+    def setAdministratives(self, nuevo_administratives):
+        self._administratives = nuevo_administratives
+
+    def setTecniques(self, nuevo_tecniques):
+        self._tecniques = nuevo_tecniques
+
     def to_print(self):
         return f"""
         Empleador: {self._empleador}
@@ -53,4 +67,7 @@ class Licitacion:
         Publicada el: {self._fecha_publicacion}
         Fecha límite: {self._fecha_limite}
         Presupuesto: {self._presupuesto}
+        Administratives: {self._administratives}
+        Tecniques: {self._tecniques}
+        
         """
