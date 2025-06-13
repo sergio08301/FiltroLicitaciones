@@ -1,3 +1,4 @@
+import csv
 import email
 from dotenv import load_dotenv
 import os
@@ -16,7 +17,7 @@ import shutil
 import time
 
 #Configuración
-dias= 3                                                #dias que puede ir atrás en correo para buscar licitaciones
+dias= 5                                                #dias que puede ir atrás en correo para buscar licitaciones
 asunto= "Correu diari de subscriptors generals"         #Asunto que quieres buscar en los correos
 colorEmpleador="#660303"                                #Color en el cual esta escrito el empleador en el correo
 
@@ -132,7 +133,9 @@ def extraer_licitaciones_desde_html(html: str) -> list:
                 enlace=enlace,
                 fecha_publicacion=fecha_publicacion,
                 fecha_limite=fecha_limite,
-                presupuesto=presupuesto
+                presupuesto=presupuesto,
+                administratives="",
+                tecniques=""
             )
 
             licitaciones.append(lic)
@@ -194,162 +197,18 @@ def filtrado_inicial(licitaciones: list) -> list:
 
     return licitaciones
 
-def descargar_pdfs_licitacion(licitacion: Licitacion, carpeta_destino: str = "pdfs"):
+def limpiar_nombre(texto):
+    texto = texto.lower().strip()
+    texto = re.sub(r"[^\w\s-]", "", texto)
+    texto = texto.replace(" ", "_")
+    return texto[:80]
+
+def descargar_pdfs_por_href(licitacion, carpeta_base="pdfs"):
     url = licitacion.GetEnlace()
-    headers = {"User-Agent": "Mozilla/5.0"}
+    titulo = licitacion.GetTitulo()
+    carpeta_licitacion = os.path.join(carpeta_base, limpiar_nombre(titulo))
+    os.makedirs(carpeta_licitacion, exist_ok=True)
 
-    try:
-        response = requests.get(url, headers=headers)
-        response.raise_for_status()
-    except Exception as e:
-        print(f"❌ Error al acceder a {url}: {e}")
-        return
-
-    soup = BeautifulSoup(response.text, "html.parser")
-
-    # Crear carpeta si no existe
-    os.makedirs(carpeta_destino, exist_ok=True)
-
-    pdf_links = soup.find_all("a", href=True)
-    encontrados = 0
-
-    for link in pdf_links:
-        texto = link.get_text(strip=True).lower()
-        href = link["href"]
-
-        # Filtro por nombre asociado a los PDF deseados
-        if "administratives" in texto or "prescripcions tècniques" in texto:
-            nombre_pdf = texto.replace(" ", "_").replace("/", "_") + ".pdf"
-
-            if not href.startswith("http"):
-                href = "https://contractaciopublica.cat" + href  # enlace relativo
-
-            ruta_pdf = os.path.join(carpeta_destino, nombre_pdf)
-
-            try:
-                pdf_data = requests.get(href, headers=headers)
-                with open(ruta_pdf, "wb") as f:
-                    f.write(pdf_data.content)
-                print(f"✅ PDF descargado: {nombre_pdf}")
-                encontrados += 1
-            except Exception as e:
-                print(f"❌ Error al descargar {href}: {e}")
-
-    if encontrados == 0:
-        print("⚠️ No se encontraron PDFs relevantes en esta licitación.")
-
-
-def descargar_pdfs_con_selenium(licitacion: Licitacion, carpeta_destino: str = "pdfs"):
-    enlace = licitacion.GetEnlace()
-
-    chrome_options = Options()
-    chrome_options.add_argument("--headless")  # para que no abra ventana
-    chrome_options.add_argument("--disable-gpu")
-    chrome_options.add_argument("--no-sandbox")
-
-    driver = webdriver.Chrome(options=chrome_options)
-    driver.get(enlace)
-
-    # Esperar que cargue el contenido JS
-    time.sleep(3)
-
-    os.makedirs(carpeta_destino, exist_ok=True)
-    encontrados = 0
-
-    try:
-        links = driver.find_elements(By.TAG_NAME, "a")
-        for link in links:
-            texto = link.text.lower()
-            if "administratives" in texto or "prescripcions tècniques" in texto:
-                href = link.get_attribute("href")
-                if href and href.endswith(".pdf"):
-                    nombre = texto.replace(" ", "_").replace("/", "_") + ".pdf"
-                    ruta = os.path.join(carpeta_destino, nombre)
-                    try:
-                        r = requests.get(href)
-                        with open(ruta, "wb") as f:
-                            f.write(r.content)
-                        print(f"✅ PDF descargado: {nombre}")
-                        encontrados += 1
-                    except Exception as e:
-                        print(f"❌ Error al descargar {href}: {e}")
-    finally:
-        driver.quit()
-
-    if encontrados == 0:
-        print("⚠️ No se encontraron PDFs en esta licitación.")
-
-
-def descargar_pdfs_clickando_selectivamente(licitacion, carpeta_destino="pdfs", carpeta_temp="tmp_descargas"):
-    url = licitacion.GetEnlace()
-    nombre_base = licitacion.GetTitulo().replace(" ", "_").replace("/", "_")
-
-    os.makedirs(carpeta_destino, exist_ok=True)
-    os.makedirs(carpeta_temp, exist_ok=True)
-
-    chrome_options = Options()
-    chrome_options.add_argument("--headless")
-    chrome_options.add_argument("--disable-gpu")
-    chrome_options.add_argument("--no-sandbox")
-    chrome_options.add_experimental_option("prefs", {
-        "download.default_directory": os.path.abspath(carpeta_temp),
-        "download.prompt_for_download": False,
-        "plugins.always_open_pdf_externally": True
-    })
-
-    driver = webdriver.Chrome(options=chrome_options)
-    driver.get(url)
-    time.sleep(3)
-
-    claves_buscadas = [
-        "plec de clàusules administratives",
-        "plec de prescripcions tècniques"
-    ]
-
-    encontrados = 0
-    try:
-        rows = driver.find_elements(By.CLASS_NAME, "row")
-
-        for row in rows:
-            label_div = row.find_element(By.CLASS_NAME, "col-md-4")
-            label_text = label_div.text.strip().lower()
-
-            if any(clave in label_text for clave in claves_buscadas):
-                try:
-                    button_div = row.find_element(By.CLASS_NAME, "col-md-8")
-                    enlaces = button_div.find_elements(By.TAG_NAME, "a")
-                    if not enlaces:
-                        print(f"⚠️ No se encontró enlace PDF en: {label_text}")
-                        continue
-                    enlace = enlaces[0]
-                    href = enlace.get_attribute("href")
-                    encontrados += 1
-                    time.sleep(2)  # espera a que descargue
-                except Exception as e:
-                    print(f"❌ No se pudo hacer clic en el botón de: {label_text} → {e}")
-
-        time.sleep(4)  # espera adicional
-    finally:
-        driver.quit()
-
-    # Mover PDFs a carpeta final
-    for filename in os.listdir(carpeta_temp):
-        if filename.lower().endswith(".pdf"):
-            destino = os.path.join(carpeta_destino, f"{nombre_base}__{filename}")
-            origen = os.path.join(carpeta_temp, filename)
-            shutil.move(origen, destino)
-            print(f"✅ Guardado: {destino}")
-
-    if encontrados == 0:
-        print("⚠️ No se encontraron documentos administrativos o técnicos.")
-
-    shutil.rmtree(carpeta_temp, ignore_errors=True)
-
-def descargar_pdfs_por_href(licitacion, carpeta_destino="pdfs"):
-    url = licitacion.GetEnlace()
-    nombre_base = licitacion.GetTitulo().replace(" ", "_").replace("/", "_")
-
-    os.makedirs(carpeta_destino, exist_ok=True)
 
     chrome_options = Options()
     chrome_options.add_argument("--headless")
@@ -365,10 +224,6 @@ def descargar_pdfs_por_href(licitacion, carpeta_destino="pdfs"):
         "plec de prescripcions tècniques"
     ]
 
-    contador = 1        #Eliminar mas tarde cuando se decida como guardar los pdfs
-
-    encontrados = 0
-
     try:
         rows = driver.find_elements(By.CLASS_NAME, "row")
 
@@ -380,44 +235,93 @@ def descargar_pdfs_por_href(licitacion, carpeta_destino="pdfs"):
                 if any(clave in label_text for clave in claves_buscadas):
                     link_div = row.find_element(By.CLASS_NAME, "col-md-8")
                     enlaces = link_div.find_elements(By.TAG_NAME, "a")
-
                     if not enlaces:
-                        print(f"⚠️ No se encontró enlace PDF en: {label_text}")
+                        print(f"⚠️ No se encontró enlace en: {label_text}")
                         continue
 
                     enlace = enlaces[0]
                     href = enlace.get_attribute("href")
-                    texto_link = enlace.text.strip()
 
                     if href:
-                        nombre = f"{contador}.pdf"
-                        destino = os.path.join(carpeta_destino, nombre)
+                        # Determinar el nombre del archivo según la clave detectada
+                        if "administratives" in label_text:
+                            nombre_archivo = "administratives.pdf"
+                        elif "tècniques" in label_text:
+                            nombre_archivo = "tecniques.pdf"
+                        else:
+                            continue  # No coincide con las claves conocidas
 
+                        destino = os.path.join(carpeta_licitacion, nombre_archivo)
+                        if os.path.exists(destino):
+                            print(f" Ya existe: {destino}")
+                            continue
                         try:
-                            headers = {
-                                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
-                            }
+                            headers = {"User-Agent": "Mozilla/5.0"}
                             r = requests.get(href, headers=headers)
                             with open(destino, "wb") as f:
                                 f.write(r.content)
-                            print(f"✅ PDF guardado como {nombre}")
-                            contador += 1
-                            encontrados += 1
+                            if "administratives" in label_text:
+                                licitacion.SetAdministratives(destino)
+                            elif "tècniques" in label_text:
+                                licitacion.SetTecniques(destino)
+                            print(f"✅ PDF guardado en: {destino}")
                         except Exception as e:
                             print(f"❌ Error al descargar desde {href}: {e}")
-            except Exception:
+            except Exception as e:
                 continue
-
     finally:
         driver.quit()
 
-    if encontrados == 0:
-        print("⚠️ No se encontró ningún documento técnico o administrativo.")
 
+def guardar_licitaciones_csv(licitaciones, ruta_archivo="licitaciones.csv"):
+    with open(ruta_archivo, mode="w", newline="", encoding="utf-8") as archivo:
+        writer = csv.writer(archivo)
+        writer.writerow([
+            "Empleador", "Titulo", "Enlace", "FechaPublicacion",
+            "FechaLimite", "Presupuesto", "AdministrativesPDF", "TecniquesPDF"
+        ])
+        for lic in licitaciones:
+            writer.writerow([
+                lic.GetEmpleador(),
+                lic.GetTitulo(),
+                lic.GetEnlace(),
+                lic.GetFecha_publicacion(),
+                lic.GetFecha_limite(),
+                lic.GetPresupuesto(),
+                lic.GetAdminsitratives,
+                lic.GetTecniques,
+            ])
 
+def cargar_licitaciones_csv(ruta_archivo="licitaciones.csv"):
+    licitaciones = []
+    with open(ruta_archivo, mode="r", encoding="utf-8") as archivo:
+        reader = csv.DictReader(archivo)
+        for fila in reader:
+            lic = Licitacion(
+                fila["Empleador"],
+                fila["Titulo"],
+                fila["Enlace"],
+                fila["FechaPublicacion"],
+                fila["FechaLimite"],
+                fila["Presupuesto"],
+                fila.get("AdministrativesPDF", "").strip() or None,
+                fila.get("TecniquesPDF", "").strip() or None
+            )
+            licitaciones.append(lic)
+    return licitaciones
 
 def main():
     #Encontrar el correo
+    csv_path = "licitaciones.csv"
+
+    respuesta = input("¿Quieres cargar las licitaciones desde archivo CSV? (y/n): ").strip().lower()
+
+    if respuesta == "y" and os.path.exists(csv_path):
+        licitaciones = cargar_licitaciones_csv(csv_path)
+        print(f"🔄 {len(licitaciones)} licitaciones cargadas desde {csv_path}")
+    else:
+        print("⏩ Se continuará con el proceso normal (descarga desde correo y scrapping).")
+
     mail = connect_to_email()
     mensaje = buscar_correo_por_asunto(mail, asunto)
     mail.logout()
@@ -428,19 +332,18 @@ def main():
     html = extraer_html_del_mensaje(mensaje)
     if html:
         licitaciones = extraer_licitaciones_desde_html(html)
-        print(f"\n📋 Se detectaron {len(licitaciones)} licitaciones desde HTML:")
+        print(f"\n📋 Se detectaron {len(licitaciones)} licitaciones del correo:")
 
     licitaciones_filtradas = filtrado_inicial(licitaciones)
-    print(f"\n📋 Se detectaron {len(licitaciones_filtradas)} licitaciones desde HTML:")
-    for i, lic in enumerate(licitaciones_filtradas, 1):
-        print(f"\n🔹 Licitación {i}:")
-        print(lic.to_print())
+    print(f"\n📋 Se conservan {len(licitaciones_filtradas)} licitaciones después del primer filtrado")
 
-    print(licitaciones[0].to_print())
-    #descargar_pdfs_con_selenium(licitaciones[0])
-    #descargar_pdfs_clickando_selectivamente(licitaciones[0])
-    descargar_pdfs_por_href(licitaciones[0])
+    for lic in licitaciones_filtradas:
+        try:
+            descargar_pdfs_por_href(lic)
+        except Exception as e:
+            print(f"❌ Error al procesar licitación: {lic.GetTitulo()} — {e}")
 
+    guardar_licitaciones_csv(licitaciones_filtradas)
 
 if __name__ == "__main__":
     main()

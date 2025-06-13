@@ -1,3 +1,5 @@
+import csv
+
 class Licitacion:
     def __init__(self, empleador, titulo, enlace, fecha_publicacion, fecha_limite, presupuesto, administratives, tecniques):
         self._empleador = empleador.strip()
@@ -6,8 +8,8 @@ class Licitacion:
         self._fecha_publicacion = fecha_publicacion.strip()
         self._fecha_limite = fecha_limite.strip()
         self._presupuesto = presupuesto.strip()
-        self._administratives= administratives.strip()
-        self._tecniques=tecniques.strip();
+        self._administratives= None
+        self._tecniques=None
 
     # Getters
     def GetEmpleador(self):
@@ -44,20 +46,21 @@ class Licitacion:
     def SetEnlace(self, nuevo_enlace):
         self._enlace = nuevo_enlace
 
-    def setFecha_publicacion(self, nueva_fecha):
+    def SetFecha_publicacion(self, nueva_fecha):
         self._fecha_publicacion = nueva_fecha
 
-    def setFecha_limite(self, nueva_fecha):
+    def SetFecha_limite(self, nueva_fecha):
         self._fecha_limite = nueva_fecha
 
-    def setPresupuesto(self, nuevo_presupuesto):
+    def SetPresupuesto(self, nuevo_presupuesto):
         self._presupuesto = nuevo_presupuesto
 
-    def setAdministratives(self, nuevo_administratives):
+    def SetAdministratives(self, nuevo_administratives):
         self._administratives = nuevo_administratives
 
-    def setTecniques(self, nuevo_tecniques):
+    def SetTecniques(self, nuevo_tecniques):
         self._tecniques = nuevo_tecniques
+
 
     def to_print(self):
         return f"""
