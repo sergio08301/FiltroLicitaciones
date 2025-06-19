@@ -1,0 +1,13 @@
+A lo largo de {n} requests se ha leido un Pliego de Cláusulas Administrativas Particulares (PCAP).
+Une los resultados obtenidos de las otras request en una sola, que siga esta estructura.
+El objetivo es completar una analisis de este PCAP, presentando ciertos items de dentro del mismo:
+1. Objeto del contrato
+2. Duración del contrato
+3. Presupuesto base de licitación y desglose
+4. Requisitos de solvencia técnica y económica
+5. Criterios de adjudicación (juicio de valor vs fórmula)
+6. Condiciones especiales de ejecución\n7. Documentación a presentar en cada sobre
+8. Normativa aplicable
+9. Plataforma de presentación y fechas clave
+
+{contenido}

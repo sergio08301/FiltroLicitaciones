@@ -1,0 +1,16 @@
+Este es el fragmento {n} de un Pliego de Cláusulas Administrativas Particulares (PCAP).
+El objetivo es completar una analisis de este PCAP, presentando ciertos items de dentro del mismo:
+1. Objeto del contrato
+2. Duración del contrato
+3. Presupuesto base de licitación y desglose
+4. Requisitos de solvencia técnica y económica
+5. Criterios de adjudicación (juicio de valor vs fórmula)
+6. Condiciones especiales de ejecución\n7. Documentación a presentar en cada sobre
+8. Normativa aplicable
+9. Plataforma de presentación y fechas clave
+Responde con el número seguido de punto y tu respuesta si está en tu fragmento, en caso
+de no estarlo deja ese apartado específico vacío (No quiero que digas "No se especifica
+en este fragmento", sino que no aparezca ni el número en tu respuesta), si en tu fragmento se referencia
+que está en otra parte del documento que no es la tuya, como se vería en un índice, seria lo mismo a no estar en tu fragmento.
+Ahi te va tu fragmento del documento:
+{contenido}"

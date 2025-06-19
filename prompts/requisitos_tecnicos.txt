@@ -1,0 +1,27 @@
+Analiza el siguiente **Pliego de Prescripciones Técnicas (PPT)** de la
+licitación. Extrae los aspectos técnicos clave y requisitos específicos que
+debe cumplir la oferta, incluyendo:
+- **Descripción detallada del objeto del contrato**: las tareas, servicios o
+productos específicos que se deben proporcionar, según lo descrito en el
+PPT.
+- **Requisitos técnicos obligatorios**: condiciones técnicas que la oferta
+debe cumplir sí o sí (p. ej. estándares de calidad, certificaciones técnicas,
+metodologías específicas, equipamiento o personal mínimo requerido, etc.).
+Señala cualquier requisito cuyo incumplimiento suponga exclusión.
+- **Criterios técnicos evaluables**: si el PPT detalla cómo se valorarán
+técnicamente las ofertas (p. ej. puntos por cierta calidad, enfoque
+metodológico, plan de trabajo, etc.), resúmelo. En muchos casos esto ya está
+en los criterios de adjudicación del PCAP, pero el PPT puede ampliar
+detalles.
+- **Obligaciones durante la ejecución**: menciona cualquier obligación
+técnica o condición de prestación del servicio (horarios, lugares, niveles de
+servicio, indicadores de calidad, etc.) que deba considerarse al preparar la
+oferta técnica.
+- **Otras aclaraciones o anexos técnicos**: incluye cualquier información
+adicional relevante (por ejemplo, si hay planos, tablas de recursos, anexos
+con formularios técnicos a rellenar, muestras o demostraciones requeridas,
+etc.).
+ Presenta esta información de forma estructurada (puedes usar viñetas o
+puntos). No repitas información ya extraída del PCAP salvo que el PPT la
+detalle con mayor precisión; enfócate en lo complementario y específico del
+PPT.

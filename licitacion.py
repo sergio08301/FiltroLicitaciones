@@ -8,8 +8,8 @@ class Licitacion:
         self._fecha_publicacion = fecha_publicacion.strip()
         self._fecha_limite = fecha_limite.strip()
         self._presupuesto = presupuesto.strip()
-        self._administratives= None
-        self._tecniques=None
+        self._administratives = administratives.strip() if administratives else ""
+        self._tecniques = tecniques.strip() if tecniques else ""
 
     # Getters
     def GetEmpleador(self):

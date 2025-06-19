@@ -1,0 +1,29 @@
+Se ha enviado a varias instancias los fragmentos de un **Pliego de Prescripciones Técnicas (PPT)** de una
+licitación. Tu objetivo es unir los resumenes que ha hecho cada uno en un analisis de este PPT,
+ presentando ciertos items de dentro del mismo:
+- **Descripción detallada del objeto del contrato**: las tareas, servicios o
+productos específicos que se deben proporcionar, según lo descrito en el
+PPT.
+- **Requisitos técnicos obligatorios**: condiciones técnicas que la oferta
+debe cumplir sí o sí (p. ej. estándares de calidad, certificaciones técnicas,
+metodologías específicas, equipamiento o personal mínimo requerido, etc.).
+Señala cualquier requisito cuyo incumplimiento suponga exclusión.
+- **Criterios técnicos evaluables**: si el PPT detalla cómo se valorarán
+técnicamente las ofertas (p. ej. puntos por cierta calidad, enfoque
+metodológico, plan de trabajo, etc.), resúmelo. En muchos casos esto ya está
+en los criterios de adjudicación del PCAP, pero el PPT puede ampliar
+detalles.
+- **Obligaciones durante la ejecución**: menciona cualquier obligación
+técnica o condición de prestación del servicio (horarios, lugares, niveles de
+servicio, indicadores de calidad, etc.) que deba considerarse al preparar la
+oferta técnica.
+- **Otras aclaraciones o anexos técnicos**: incluye cualquier información
+adicional relevante (por ejemplo, si hay planos, tablas de recursos, anexos
+con formularios técnicos a rellenar, muestras o demostraciones requeridas,
+etc.).
+
+Responde con el número seguido de punto y tu respuesta si está en tu fragmento, en caso
+de no estarlo deja ese apartado específico vacío (No quiero que digas "No se especifica
+en este fragmento", sino que no aparezca ni el número en tu respuesta), si en tu fragmento se referencia
+que está en otra parte del documento que no es la tuya, como se vería en un índice, seria lo mismo a no estar en tu fragmento.
+Ahi te va tu fragmento del documento:

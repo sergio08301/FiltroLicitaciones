@@ -15,10 +15,14 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 import shutil
 import time
+from pdf_analisis import openAIRequest,cargar_prompts_desde_txt
+
 
 #Configuración
-dias= 5                                                #dias que puede ir atrás en correo para buscar licitaciones
+dias= 10                                                #dias que puede ir atrás en correo para buscar licitaciones
 asunto= "Correu diari de subscriptors generals"         #Asunto que quieres buscar en los correos
+presupuestoLimite=150000                                #Precio minimo por el cual aceptamos las licitaciones
+diasLimite=26                                           #Plazo para hacer la licitación mínimo
 colorEmpleador="#660303"                                #Color en el cual esta escrito el empleador en el correo
 
 # Cargar variables de entorno (.env)
@@ -142,60 +146,42 @@ def extraer_licitaciones_desde_html(html: str) -> list:
 
     return licitaciones
 
-def parsear_licitaciones(texto):
-    # Dividir el texto en bloques de licitaciones (separados por 2+ saltos de línea)
-    bloques = re.split(r'\n', texto.strip())
+def filtrado_inicial(licitaciones: list) -> list:
+    #TODO Meter los primeros filtros, como la fecha o el importe insuficientes
+    resultado = []
+    hoy = datetime.today()
 
-    licitaciones = []
-
-    for bloque in bloques:
-        if not bloque.strip():
+    for lic in licitaciones:
+        # Validar fecha límite
+        fecha_limite_str = lic.GetFecha_limite().strip().split(" ")[0]  # Solo la parte de la fecha
+        fecha_limite_str = fecha_limite_str.replace("h", "").strip()  # Por si acaso
+        try:
+            fecha_limite = datetime.strptime(fecha_limite_str, "%d/%m/%Y")
+            dias_restantes = (fecha_limite - hoy).days
+            if dias_restantes < diasLimite:
+                print(f" DESCARTADA por fecha: {lic.GetTitulo()} (quedan {dias_restantes} días)")
+                continue
+        except Exception:
+            print(f"⚠️ DESCARTADA por fecha inválida: {lic.GetTitulo()} ({fecha_limite_str})")
+            continue
+        # Validar presupuesto
+        presupuesto_str = lic.GetPresupuesto().lower()
+        presupuesto_str = presupuesto_str.replace("sense iva", "")
+        presupuesto_str = presupuesto_str.replace("€", "")
+        presupuesto_str = presupuesto_str.replace(".", "")
+        presupuesto_str = presupuesto_str.replace(",", ".")
+        presupuesto_str = presupuesto_str.strip()
+        try:
+            presupuesto = float(presupuesto_str)
+            if presupuesto < presupuestoLimite:
+                print(f" DESCARTADA por presupuesto: {lic.GetTitulo()} ({presupuesto:.2f} €)")
+                continue
+        except Exception:
+            print(f"⚠️ DESCARTADA por presupuesto inválido: {lic.GetTitulo()} ({lic.GetPresupuesto()})")
             continue
 
-        try:
-            # Extraer título (todo hasta el enlace)
-            #empleador=
-
-            titulo_match = re.search(r'^(.*?)\s*<https?://', bloque, re.DOTALL)
-            titulo = titulo_match.group(1).strip() if titulo_match else "Sin título"
-
-            # Extraer enlace
-            enlace_match = re.search(r'<(https?://[^\s>]+)>', bloque)
-            enlace = enlace_match.group(1) if enlace_match else "Sin enlace"
-
-            # Extraer fechas y presupuesto
-            fecha_pub_match = re.search(r'Data de publicació:\s*(.*?)\s*h', bloque)
-            fecha_pub = fecha_pub_match.group(1) if fecha_pub_match else "Fecha desconocida"
-
-            fecha_lim_match = re.search(r'Termini de presentació d\'ofertes:\s*(.*?)\s*h', bloque)
-            fecha_lim = fecha_lim_match.group(1) if fecha_lim_match else "Fecha límite desconocida"
-
-            presupuesto_match = re.search(r'Pressupost de licitació:\s*([\d.,]+)\s*€', bloque)
-            presupuesto = f"{presupuesto_match.group(1)} € sense IVA" if presupuesto_match else "Presupuesto no especificado"
-
-            # Crear objeto Licitacion
-            licitacion = Licitacion(
-                titulo=titulo,
-                enlace=enlace,
-                fecha_publicacion=fecha_pub,
-                fecha_limite=fecha_lim,
-                presupuesto=presupuesto
-            )
-
-            licitaciones.append(licitacion)
-
-        except Exception as e:
-            print(
-                f"Error procesando bloque: {e}\n{bloque[:200]}...")  # Mostrar solo el inicio del bloque para no saturar la salida
-
-    return licitaciones
-
-
-def filtrado_inicial(licitaciones: list) -> list:
-
-    #TODO Meter los primeros filtros, como la fecha o el importe insuficientes
-
-    return licitaciones
+        resultado.append(lic)
+    return resultado
 
 def limpiar_nombre(texto):
     texto = texto.lower().strip()
@@ -252,6 +238,12 @@ def descargar_pdfs_por_href(licitacion, carpeta_base="pdfs"):
                             continue  # No coincide con las claves conocidas
 
                         destino = os.path.join(carpeta_licitacion, nombre_archivo)
+
+                        if "administratives" in label_text:
+                            licitacion.SetAdministratives(destino)
+                        elif "tècniques" in label_text:
+                            licitacion.SetTecniques(destino)
+
                         if os.path.exists(destino):
                             print(f" Ya existe: {destino}")
                             continue
@@ -260,10 +252,6 @@ def descargar_pdfs_por_href(licitacion, carpeta_base="pdfs"):
                             r = requests.get(href, headers=headers)
                             with open(destino, "wb") as f:
                                 f.write(r.content)
-                            if "administratives" in label_text:
-                                licitacion.SetAdministratives(destino)
-                            elif "tècniques" in label_text:
-                                licitacion.SetTecniques(destino)
                             print(f"✅ PDF guardado en: {destino}")
                         except Exception as e:
                             print(f"❌ Error al descargar desde {href}: {e}")
@@ -278,7 +266,7 @@ def guardar_licitaciones_csv(licitaciones, ruta_archivo="licitaciones.csv"):
         writer = csv.writer(archivo)
         writer.writerow([
             "Empleador", "Titulo", "Enlace", "FechaPublicacion",
-            "FechaLimite", "Presupuesto", "AdministrativesPDF", "TecniquesPDF"
+            "FechaLimite", "Presupuesto", "Administratives", "Tecniques"
         ])
         for lic in licitaciones:
             writer.writerow([
@@ -288,8 +276,8 @@ def guardar_licitaciones_csv(licitaciones, ruta_archivo="licitaciones.csv"):
                 lic.GetFecha_publicacion(),
                 lic.GetFecha_limite(),
                 lic.GetPresupuesto(),
-                lic.GetAdminsitratives,
-                lic.GetTecniques,
+                lic.GetAdministratives(),
+                lic.GetTecniques(),
             ])
 
 def cargar_licitaciones_csv(ruta_archivo="licitaciones.csv"):
@@ -304,46 +292,72 @@ def cargar_licitaciones_csv(ruta_archivo="licitaciones.csv"):
                 fila["FechaPublicacion"],
                 fila["FechaLimite"],
                 fila["Presupuesto"],
-                fila.get("AdministrativesPDF", "").strip() or None,
-                fila.get("TecniquesPDF", "").strip() or None
+                fila.get("Administratives", "").strip() or None,
+                fila.get("Tecniques", "").strip() or None
             )
             licitaciones.append(lic)
     return licitaciones
 
 def main():
-    #Encontrar el correo
+
     csv_path = "licitaciones.csv"
+    licitaciones_guardadas = []
 
     respuesta = input("¿Quieres cargar las licitaciones desde archivo CSV? (y/n): ").strip().lower()
 
     if respuesta == "y" and os.path.exists(csv_path):
-        licitaciones = cargar_licitaciones_csv(csv_path)
-        print(f"🔄 {len(licitaciones)} licitaciones cargadas desde {csv_path}")
+        licitaciones_guardadas = cargar_licitaciones_csv(csv_path)
+        print(f" {len(licitaciones_guardadas)} licitaciones cargadas desde {csv_path}")
     else:
-        print("⏩ Se continuará con el proceso normal (descarga desde correo y scrapping).")
+        print(" Se continuará con el proceso normal (descarga desde correo y scrapping).")
 
+    # Encontrar el correo
     mail = connect_to_email()
     mensaje = buscar_correo_por_asunto(mail, asunto)
     mail.logout()
     if not mensaje:
         print("❌ No se encontró ningún correo reciente con ese asunto.")
         return
-
+    #Convertir las licitaciones del correo en objetos licitacion
     html = extraer_html_del_mensaje(mensaje)
-    if html:
-        licitaciones = extraer_licitaciones_desde_html(html)
-        print(f"\n📋 Se detectaron {len(licitaciones)} licitaciones del correo:")
+    if not html:
+        print("⚠️ No se pudo extraer HTML del correo.")
+        return
 
-    licitaciones_filtradas = filtrado_inicial(licitaciones)
+    licitaciones_extraidas = extraer_licitaciones_desde_html(html)
+    print(f"\n📋 Se detectaron {len(licitaciones_extraidas)} licitaciones del correo")
+
+    # Ignorar las cargadas del csv
+    enlaces_existentes = {l.GetEnlace() for l in licitaciones_guardadas}
+    nuevas_licitaciones = [
+        l for l in licitaciones_extraidas if l.GetEnlace() not in enlaces_existentes
+    ]
+    print(f"📥 Nuevas licitaciones detectadas: {len(nuevas_licitaciones)}")
+
+    #Descarta las que no cumplas ciertos requisitos
+    licitaciones_filtradas = filtrado_inicial(nuevas_licitaciones)
     print(f"\n📋 Se conservan {len(licitaciones_filtradas)} licitaciones después del primer filtrado")
 
+    # Scrapping de las restantes
     for lic in licitaciones_filtradas:
+        if lic.GetAdministratives() and os.path.exists(lic.GetAdministratives()) and \
+                lic.GetTecniques() and os.path.exists(lic.GetTecniques()):
+            print(f" Ya existen los PDF para: {lic.GetTitulo()}")
+            continue
+
         try:
             descargar_pdfs_por_href(lic)
         except Exception as e:
             print(f"❌ Error al procesar licitación: {lic.GetTitulo()} — {e}")
 
-    guardar_licitaciones_csv(licitaciones_filtradas)
+    todas_licitaciones = licitaciones_guardadas + licitaciones_filtradas
+    guardar_licitaciones_csv(todas_licitaciones, csv_path)
+    print(f"✅ Datos guardados en {csv_path}")
+
+    prompts = cargar_prompts_desde_txt()
+    result = openAIRequest(todas_licitaciones[1], "requisitos_administrativos", prompts)
+    print(result)
+
 
 if __name__ == "__main__":
     main()

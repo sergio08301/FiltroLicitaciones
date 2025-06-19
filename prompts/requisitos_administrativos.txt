@@ -1,0 +1,38 @@
+ Analiza el siguiente **Pliego de Cláusulas Administrativas Particulares
+(PCAP)** de una licitación pública. Extrae y presenta de forma estructurada
+todos los requisitos y condiciones clave que contiene, incluyendo:
+ - **Objeto del contrato**: descripción del servicio o proyecto a realizar.
+ - **Duración del contrato** (y posibles prórrogas): plazo de ejecución y
+extensiones previstas.
+- **Presupuesto base de licitación** y su desglose económico: importe máximo
+(sin IVA, con IVA) y, si se indica, valor estimado del contrato.
+- **Requisitos de solvencia técnica y económica**: qué experiencia, medios
+técnicos o financieros debe acreditar la empresa (por ejemplo, volumen de
+negocio mínimo, proyectos realizados, personal cualificado, seguros, etc.).
+Menciona también cómo deben acreditarse (documentos requeridos).
+ - **Criterios de adjudicación**: detalla los criterios con los que se
+evaluarán las ofertas. Especifica cuáles son **criterios de juicio de valor**
+ (evaluación subjetiva) y cuáles son **criterios evaluables mediante fórmula**
+ (puntuación automática), indicando la ponderación o puntos de cada uno. Si se
+ proporciona alguna fórmula (por ejemplo, para puntuación del precio),
+inclúyela.
+- **Condiciones especiales de ejecución**: identifica cláusulas especiales
+que deban cumplirse durante la ejecución del contrato (ejemplos: condiciones
+sociales, ambientales o de innovación obligatorias).
+- **Documentación a presentar en cada sobre**: enumera qué documentos o
+contenidos deben incluirse en el Sobre administrativo, en el Sobre técnico
+(oferta técnica) y en el Sobre económico (oferta económica) según el pliego.
+Indica si procede el uso de medios electrónicos (sobre digital) para la
+presentación.
+- **Normativa aplicable**: menciona las leyes o reglamentos citados (p. ej.
+Ley 9/2017 de Contratos del Sector Público – LCSP – y otras normas
+específicas si las hubiera).
+- **Plataforma de presentación y fechas clave**: señala la plataforma
+electrónica a usar para presentar la oferta (ej. Plataforma de Contratación
+del Sector Público u otra), la **fecha límite** de presentación de ofertas
+y otras fechas importantes (apertura de sobres, visitas obligatorias, plazo
+de preguntas, etc.).
+
+ Presenta la información de manera ordenada, usando encabezados o viñetas para
+cada apartado como se ha indicado, y proporcionando los detalles específicos
+encontrados en el PCAP.
