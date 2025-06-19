@@ -99,29 +99,49 @@ def openAIRequest(licitacion, tipo_prompt, prompts) -> str:
 
         print("🧠 Generando análisis final estructurado...")
 
-        # Unir fragmentos con separador
-        resumen_fragmentado = "\n\n---\n\n".join(subresultados)
+        # Juntar todos los subresultados y ver si caben en una sola síntesis
+        resumen_total = "\n\n---\n\n".join(subresultados)
+        MAX_PROMPT_CHARS = 20000  # ~6-7k tokens
 
-        # Controlar el largo total solo si supera el límite de tokens (~6000 tokens ≈ 20k caracteres)
-        MAX_PROMPT_CHARS = 20000
-        if len(resumen_fragmentado) > MAX_PROMPT_CHARS:
-            print("✂️ Recortando resumen global por longitud total...")
+        if len(resumen_total) <= MAX_PROMPT_CHARS:
+            print("✅ Juntando directamente todos los subresultados en una sola síntesis final.")
+            final_prompt = prompts[tipo_prompt]["prompt"].replace("{contenido}", resumen_total)
+        else:
+            print("🔁 Fragmento total demasiado largo. Aplicando síntesis en bloques intermedios...")
 
-            # Cortamos el texto en límites entre fragmentos
-            partes = resumen_fragmentado.split("\n\n---\n\n")
-            texto_acumulado = ""
+            # Agrupar en dos bloques
+            grupos = [subresultados[:len(subresultados) // 2], subresultados[len(subresultados) // 2:]]
+            resumenes_intermedios = []
 
-            for parte in partes:
-                if len(texto_acumulado) + len(parte) + len("\n\n---\n\n") > MAX_PROMPT_CHARS:
-                    break
-                texto_acumulado += parte + "\n\n---\n\n"
+            for i, grupo in enumerate(grupos):
+                print(f"🔄 Sintetizando grupo {i + 1}/{len(grupos)}...")
+                grupo_texto = "\n\n---\n\n".join(grupo)
 
-            resumen_fragmentado = texto_acumulado.strip()
+                prompt_union = prompts.get(f"{tipo_prompt}_union", {}).get("prompt", "")
+                if not prompt_union:
+                    return f"❌ Falta el prompt de síntesis para {tipo_prompt}_union"
+
+                prompt_completo = prompt_union.replace("{contenido}", grupo_texto)
+
+                try:
+                    response = client.chat.completions.create(
+                        model="gpt-4",
+                        messages=[{"role": "user", "content": prompt_completo}],
+                        temperature=0.3,
+                        max_tokens=1500
+                    )
+                    resumenes_intermedios.append(response.choices[0].message.content.strip())
+                except Exception as e:
+                    return f"❌ Error en síntesis del grupo {i + 1}: {e}"
+
+            # Síntesis final de los resúmenes intermedios
+            resumen_final_input = "\n\n---\n\n".join(resumenes_intermedios)
             prompt_union = prompts.get(f"{tipo_prompt}_union", {}).get("prompt", "")
-            final_prompt = prompt_union.replace("{contenido}", resumen_fragmentado)
+            final_prompt = prompt_union.replace("{contenido}", resumen_final_input)
+
     else:
-        prompt_base = prompts[tipo_prompt]["prompt"]
-        final_prompt = prompt_base.replace("{contenido}", contenido)
+        final_prompt = prompts[tipo_prompt]["prompt"].replace("{contenido}", contenido)
+
 
 
     # Enviar a OpenAI
@@ -130,7 +150,7 @@ def openAIRequest(licitacion, tipo_prompt, prompts) -> str:
             model="gpt-4",
             messages=[{"role": "user", "content": final_prompt}],
             temperature=0.3,
-            max_tokens=1000
+            max_tokens=1500
         )
         return final_response.choices[0].message.content.strip()
     except Exception as e:

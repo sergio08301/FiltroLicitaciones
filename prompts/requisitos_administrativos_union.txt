@@ -1,4 +1,4 @@
-A lo largo de {n} requests se ha leido un Pliego de Cláusulas Administrativas Particulares (PCAP).
+A lo largo de varias requests se ha leido un Pliego de Cláusulas Administrativas Particulares (PCAP).
 Une los resultados obtenidos de las otras request en una sola, que siga esta estructura.
 El objetivo es completar una analisis de este PCAP, presentando ciertos items de dentro del mismo:
 1. Objeto del contrato
