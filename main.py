@@ -260,6 +260,21 @@ def descargar_pdfs_por_href(licitacion, carpeta_base="pdfs"):
     finally:
         driver.quit()
 
+def guardar_resumen_en_txt(licitacion, texto, tipo):
+    from pathlib import Path
+    carpeta = Path(licitacion.GetAdministratives() or licitacion.GetTecniques()).parent
+    nombre_archivo = f"resumen_{tipo}.txt"
+    ruta_resumen = carpeta / nombre_archivo
+
+    with open(ruta_resumen, "w", encoding="utf-8") as f:
+        f.write(texto)
+
+    if tipo == "administrativo":
+        licitacion.SetResumenAdministrativo(str(ruta_resumen))
+    elif tipo == "tecnico":
+        licitacion.SetResumenTecnico(str(ruta_resumen))
+    elif tipo == "sintesis":
+        licitacion.SetSintesis(str(ruta_resumen))
 
 def guardar_licitaciones_csv(licitaciones, ruta_archivo="licitaciones.csv"):
     with open(ruta_archivo, mode="w", newline="", encoding="utf-8") as archivo:
@@ -353,10 +368,13 @@ def main():
     todas_licitaciones = licitaciones_guardadas + licitaciones_filtradas
     guardar_licitaciones_csv(todas_licitaciones, csv_path)
     print(f"✅ Datos guardados en {csv_path}")
-
+    print(todas_licitaciones[0].GetTitulo())
     prompts = cargar_prompts_desde_txt()
-    result = openAIRequest(todas_licitaciones[1], "requisitos_administrativos", prompts)
-    print(result)
+    result = openAIRequest(todas_licitaciones[0], "requisitos_administrativos", prompts)
+    guardar_resumen_en_txt(todas_licitaciones[0], result, "administrativo")
+    result = openAIRequest(todas_licitaciones[0], "requisitos_tecnicos", prompts)
+    guardar_resumen_en_txt(todas_licitaciones[0], result, "tecnicos")
+    result = openAIRequest(todas_licitaciones[0], "sintesis_requisitos", prompts)
 
 
 if __name__ == "__main__":

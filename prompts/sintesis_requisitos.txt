@@ -28,4 +28,5 @@ Asegúrate de que esta síntesis incluya **todos los detalles importantes** de
 la licitación sin repetir información en exceso. Debe servir como guía para
 verificar que, al preparar la oferta, no se pasa por alto ningún requisito ni
 fecha importante.
+
 {contenido}

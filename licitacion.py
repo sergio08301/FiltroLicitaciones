@@ -10,6 +10,9 @@ class Licitacion:
         self._presupuesto = presupuesto.strip()
         self._administratives = administratives.strip() if administratives else ""
         self._tecniques = tecniques.strip() if tecniques else ""
+        self._resumen_administrativo = ""
+        self._resumen_tecnico = ""
+        self._sintesis = ""
 
     # Getters
     def GetEmpleador(self):
@@ -36,6 +39,15 @@ class Licitacion:
     def GetTecniques(self):
         return self._tecniques
 
+    def GetResumenAdministrativo(self):
+        return self._resumen_administrativo
+
+    def GetResumenTecnico(self):
+        return self._resumen_tecnico
+
+    def GetSintesis(self):
+        return self._sintesis
+
     # Setters
     def SetEmpleador(self, nuevo_empleador):
         self._empleador = nuevo_empleador
@@ -60,6 +72,15 @@ class Licitacion:
 
     def SetTecniques(self, nuevo_tecniques):
         self._tecniques = nuevo_tecniques
+
+    def SetResumenTecnico(self, path):
+        self._resumen_tecnico = path
+
+    def SetResumenAdministrativo(self, path):
+        self._resumen_administrativo = path
+
+    def SetSintesis(self, path):
+        self._sintesis = path
 
 
     def to_print(self):

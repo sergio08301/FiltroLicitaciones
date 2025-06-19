@@ -36,3 +36,5 @@ de preguntas, etc.).
  Presenta la información de manera ordenada, usando encabezados o viñetas para
 cada apartado como se ha indicado, y proporcionando los detalles específicos
 encontrados en el PCAP.
+
+{contenido}

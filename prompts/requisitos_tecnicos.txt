@@ -25,3 +25,5 @@ etc.).
 puntos). No repitas información ya extraída del PCAP salvo que el PPT la
 detalle con mayor precisión; enfócate en lo complementario y específico del
 PPT.
+
+{contenido}

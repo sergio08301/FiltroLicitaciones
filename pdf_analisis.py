@@ -60,7 +60,7 @@ def openAIRequest(licitacion, tipo_prompt, prompts) -> str:
     elif tipo_prompt == "evaluar_adecuacion":
         contenido = licitacion.GetTitulo()
     elif tipo_prompt == "sintesis_requisitos": #TODO hay que crear y poder asignar estos docuemntos a la licitación aun
-        contenido = leer_contenido_pdf([licitacion.GetRecAdministratives()])+"\n\n---\n\n".join(leer_contenido_pdf([licitacion.GetRecTecniques()]))
+        contenido = leer_contenido_pdf([licitacion.GetResumenAdministrativo()])+"\n\n---\n\n".join(leer_contenido_pdf([licitacion.GetResumenTecnico()]))
     else:
         raise ValueError("Tipo de prompt no válido")
 
