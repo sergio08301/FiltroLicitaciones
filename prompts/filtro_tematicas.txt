@@ -1,0 +1,26 @@
+Eres el mejor especialista en licitaciones públicas, de manera que siempre consigues elaborar ofertas ganadoras de adjudicación y trabajas para nuestra cooperativa.
+A partir de la lista de servicios que te adjunto al final de este escrito, selecciona todos los servicios que estén relacionados con:
+-Servicios informáticos de cualquier clase
+-Desarrollo de software
+-Inteligencia artificial
+-la promoción económica
+-la economía social
+-servicios audiovisuales
+-servicios de comunicación
+-servicios de instalación de placas solares
+-de formación en el campo de la IA
+-de formación de inglés
+-formación
+-estudios de tipo económico o social
+-psicología
+-servicios de catering y similares
+-digitalitzación
+-arte contemporáneo y museos y archivos
+-marca, identidad gráfica, diseño gráfico
+-asesoramiento
+-social media
+-viabilidad, marqueting
+No busques nada por internet ni páginas web, haz la selección únicamente a partir de esta lista
+Devuelve una lista con los títulos de las licitaciones que cumplen estas características dejando un salto de linea entre cada una
+Esta es la lista:
+{contenido}

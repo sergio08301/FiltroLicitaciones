@@ -15,14 +15,13 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 import shutil
 import time
-from pdf_analisis import openAIRequest,cargar_prompts_desde_txt
-
+from pdf_analisis import openAIRequest, cargar_prompts_desde_txt, filtrar_por_tematicas
 
 #Configuración
-dias= 10                                                #dias que puede ir atrás en correo para buscar licitaciones
+dias= 15                                                #dias que puede ir atrás en correo para buscar licitaciones
 asunto= "Correu diari de subscriptors generals"         #Asunto que quieres buscar en los correos
-presupuestoLimite=150000                                #Precio minimo por el cual aceptamos las licitaciones
-diasLimite=26                                           #Plazo para hacer la licitación mínimo
+presupuestoLimite=500000                                #Precio minimo por el cual aceptamos las licitaciones
+diasLimite=11 #26                                           #Plazo para hacer la licitación mínimo
 colorEmpleador="#660303"                                #Color en el cual esta escrito el empleador en el correo
 
 # Cargar variables de entorno (.env)
@@ -147,7 +146,6 @@ def extraer_licitaciones_desde_html(html: str) -> list:
     return licitaciones
 
 def filtrado_inicial(licitaciones: list) -> list:
-    #TODO Meter los primeros filtros, como la fecha o el importe insuficientes
     resultado = []
     hoy = datetime.today()
 
@@ -351,7 +349,10 @@ def main():
 
     #Descarta las que no cumplas ciertos requisitos
     licitaciones_filtradas = filtrado_inicial(nuevas_licitaciones)
+    prompts = cargar_prompts_desde_txt()
     print(f"\n📋 Se conservan {len(licitaciones_filtradas)} licitaciones después del primer filtrado")
+    licitaciones_filtradas = filtrar_por_tematicas(licitaciones_filtradas, prompts)
+    print(f"\n📋 Se conservan {len(licitaciones_filtradas)} licitaciones después del segundo filtrado")
 
     # Scrapping de las restantes
     for lic in licitaciones_filtradas:
@@ -368,13 +369,37 @@ def main():
     todas_licitaciones = licitaciones_guardadas + licitaciones_filtradas
     guardar_licitaciones_csv(todas_licitaciones, csv_path)
     print(f"✅ Datos guardados en {csv_path}")
-    print(todas_licitaciones[0].GetTitulo())
+
     prompts = cargar_prompts_desde_txt()
-    result = openAIRequest(todas_licitaciones[0], "requisitos_administrativos", prompts)
-    guardar_resumen_en_txt(todas_licitaciones[0], result, "administrativo")
-    result = openAIRequest(todas_licitaciones[0], "requisitos_tecnicos", prompts)
-    guardar_resumen_en_txt(todas_licitaciones[0], result, "tecnicos")
-    result = openAIRequest(todas_licitaciones[0], "sintesis_requisitos", prompts)
+    for lic in todas_licitaciones:
+        print(f"\n📝 Procesando: {lic.GetTitulo()}")
+
+        # Requisitos Administrativos
+        ruta_admin = lic.GetResumenAdministrativo()
+        if ruta_admin and os.path.exists(ruta_admin):
+            print("📄 Ya existe el resumen administrativo, se omite.")
+        else:
+            resultado_admin = openAIRequest(lic, "requisitos_administrativos", prompts)
+            guardar_resumen_en_txt(lic, resultado_admin, "administrativo")
+            print("✅ Resumen administrativo generado y guardado.")
+
+        # Requisitos Técnicos
+        ruta_tec = lic.GetResumenTecnico()
+        if ruta_tec and os.path.exists(ruta_tec):
+            print("📄 Ya existe el resumen técnico, se omite.")
+        else:
+            resultado_tec = openAIRequest(lic, "requisitos_tecnicos", prompts)
+            guardar_resumen_en_txt(lic, resultado_tec, "tecnico")
+            print("✅ Resumen técnico generado y guardado.")
+
+        # Síntesis Combinada
+        ruta_sintesis = lic.GetSintesis()
+        if ruta_sintesis and os.path.exists(ruta_sintesis):
+            print("📄 Ya existe la síntesis, se omite.")
+        else:
+            resultado_sintesis = openAIRequest(lic, "sintesis_requisitos", prompts)
+            guardar_resumen_en_txt(lic, resultado_sintesis, "sintesis")
+            print("✅ Síntesis generada y guardada.")
 
 
 if __name__ == "__main__":

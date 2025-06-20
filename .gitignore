@@ -1,6 +1,9 @@
 # Entorno virtual
 venv/
 
+# PDFs
+pdfs/
+
 # Configuración de PyCharm / IntelliJ
 .idea/
 

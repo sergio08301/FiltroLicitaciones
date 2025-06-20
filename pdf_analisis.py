@@ -2,6 +2,7 @@ import os
 from openai import OpenAI
 import fitz  # PyMuPDF
 import os
+import re
 import fitz  # PyMuPDF
 from dotenv import load_dotenv
 import json
@@ -59,8 +60,23 @@ def openAIRequest(licitacion, tipo_prompt, prompts) -> str:
         contenido = leer_contenido_pdf([licitacion.GetAdministratives()])
     elif tipo_prompt == "evaluar_adecuacion":
         contenido = licitacion.GetTitulo()
-    elif tipo_prompt == "sintesis_requisitos": #TODO hay que crear y poder asignar estos docuemntos a la licitación aun
-        contenido = leer_contenido_pdf([licitacion.GetResumenAdministrativo()])+"\n\n---\n\n".join(leer_contenido_pdf([licitacion.GetResumenTecnico()]))
+    elif tipo_prompt == "sintesis_requisitos":
+        ruta_admin = licitacion.GetResumenAdministrativo()
+        ruta_tec = licitacion.GetResumenTecnico()
+        if not (ruta_admin and ruta_tec and os.path.exists(ruta_admin) and os.path.exists(ruta_tec)):
+            return "❌ No se encontraron los resúmenes previos necesarios para la síntesis."
+        try:
+            with open(ruta_admin, "r", encoding="utf-8") as f_admin, open(ruta_tec, "r", encoding="utf-8") as f_tec:
+                contenido_admin = f_admin.read().strip()
+                contenido_tec = f_tec.read().strip()
+                contenido = f"--- ADMINISTRATIVO ---\n{contenido_admin}\n\n--- TECNICO ---\n{contenido_tec}"
+        except Exception as e:
+            return f"❌ Error al leer los archivos de resumen: {e}"
+    elif tipo_prompt == "filtro_tematicas":
+        contenido=""
+        for lic in licitacion:
+            contenido.join(lic.getTitulo()+"\n")
+
     else:
         raise ValueError("Tipo de prompt no válido")
 
@@ -142,8 +158,6 @@ def openAIRequest(licitacion, tipo_prompt, prompts) -> str:
     else:
         final_prompt = prompts[tipo_prompt]["prompt"].replace("{contenido}", contenido)
 
-
-
     # Enviar a OpenAI
     try:
         final_response = client.chat.completions.create(
@@ -155,3 +169,47 @@ def openAIRequest(licitacion, tipo_prompt, prompts) -> str:
         return final_response.choices[0].message.content.strip()
     except Exception as e:
         return f"❌ Error durante la síntesis final: {e}"
+
+def extraer_titulos_filtrados(texto):
+    lineas = texto.splitlines()
+    titulos = []
+
+    for linea in lineas:
+        linea = linea.strip()
+        if linea.startswith("-"):
+            titulos.append(linea[1:].strip())
+        elif linea:  # si no empieza con "-", asumimos que es texto plano
+            titulos.append(linea)
+    return titulos
+
+def filtrar_por_tematicas(lista_licitaciones, prompts):
+    prompt_base = prompts.get("filtro_tematicas", {}).get("prompt", "")
+    if not prompt_base:
+        print("❌ No se encontró el prompt de filtro_tematicas.")
+        return lista_licitaciones
+
+    # Armar la lista de títulos en texto
+    titulos = [lic.GetTitulo() for lic in lista_licitaciones]
+    contenido = "\n".join(f"- {t}" for t in titulos)
+    prompt = prompt_base.replace("{contenido}", contenido)
+
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4",
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.2,
+            max_tokens=1500
+        )
+        texto_respuesta = response.choices[0].message.content.strip()
+    except Exception as e:
+        print(f"❌ Error al filtrar por temática: {e}")
+        return lista_licitaciones
+
+    # Extraer títulos devueltos por la IA
+    titulos_filtrados = extraer_titulos_filtrados(texto_respuesta)
+    for lic in lista_licitaciones:
+        if lic.GetTitulo().strip() not in titulos_filtrados:
+            print(f"❌ DESCARTADA por temática: {lic.GetTitulo()}")
+
+    # Filtrar licitaciones cuyo título esté en la respuesta
+    return [lic for lic in lista_licitaciones if lic.GetTitulo().strip() in titulos_filtrados]
