@@ -1,13 +1,41 @@
-A lo largo de varias requests se ha leido un Pliego de Cláusulas Administrativas Particulares (PCAP).
+A lo largo de varias llamadas a la API se ha leido un Pliego de Cláusulas Administrativas Particulares (PCAP).
 Une los resultados obtenidos de las otras request en una sola, que siga esta estructura.
+Si varios fragmentos han respondido a un mismo apartado escribe el que sea mas probable,
+ya sea porque se ha repetido mas en los fragmentos o esta mas completo.
 El objetivo es completar una analisis de este PCAP, presentando ciertos items de dentro del mismo:
-1. Objeto del contrato
-2. Duración del contrato
-3. Presupuesto base de licitación y desglose
-4. Requisitos de solvencia técnica y económica
-5. Criterios de adjudicación (juicio de valor vs fórmula)
-6. Condiciones especiales de ejecución\n7. Documentación a presentar en cada sobre
-8. Normativa aplicable
-9. Plataforma de presentación y fechas clave
+ - **Objeto del contrato**: descripción del servicio o proyecto a realizar.
+ - **Duración del contrato** (y posibles prórrogas): plazo de ejecución y
+extensiones previstas.
+- **Presupuesto base de licitación** y su desglose económico: importe máximo
+(sin IVA, con IVA) y, si se indica, valor estimado del contrato.
+- **Requisitos de solvencia técnica y económica**: qué experiencia, medios
+técnicos o financieros debe acreditar la empresa (por ejemplo, volumen de
+negocio mínimo, proyectos realizados, personal cualificado, seguros, etc.).
+Menciona también cómo deben acreditarse (documentos requeridos).
+ - **Criterios de adjudicación**: detalla los criterios con los que se
+evaluarán las ofertas. Especifica cuáles son **criterios de juicio de valor**
+ (evaluación subjetiva) y cuáles son **criterios evaluables mediante fórmula**
+ (puntuación automática), indicando la ponderación o puntos de cada uno. Si se
+ proporciona alguna fórmula (por ejemplo, para puntuación del precio),
+inclúyela.
+- **Condiciones especiales de ejecución**: identifica cláusulas especiales
+que deban cumplirse durante la ejecución del contrato (ejemplos: condiciones
+sociales, ambientales o de innovación obligatorias).
+- **Documentación a presentar en cada sobre**: enumera qué documentos o
+contenidos deben incluirse en el Sobre administrativo, en el Sobre técnico
+(oferta técnica) y en el Sobre económico (oferta económica) según el pliego.
+Indica si procede el uso de medios electrónicos (sobre digital) para la
+presentación.
+- **Normativa aplicable**: menciona las leyes o reglamentos citados (p. ej.
+Ley 9/2017 de Contratos del Sector Público – LCSP – y otras normas
+específicas si las hubiera).
+- **Plataforma de presentación y fechas clave**: señala la plataforma
+electrónica a usar para presentar la oferta (ej. Plataforma de Contratación
+del Sector Público u otra), la **fecha límite** de presentación de ofertas
+y otras fechas importantes (apertura de sobres, visitas obligatorias, plazo
+de preguntas, etc.).
+
+Sé muy breve al responder a cada pregunta, no des explicaciones extra.
+No busques nada en internet, solo usa la información que se te ha proporcionado.
 
 {contenido}

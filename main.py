@@ -18,10 +18,10 @@ import time
 from pdf_analisis import openAIRequest, cargar_prompts_desde_txt, filtrar_por_tematicas
 
 #Configuración
-dias= 15                                                #dias que puede ir atrás en correo para buscar licitaciones
+dias= 30                                                #dias que puede ir atrás en correo para buscar licitaciones
 asunto= "Correu diari de subscriptors generals"         #Asunto que quieres buscar en los correos
 presupuestoLimite=500000                                #Precio minimo por el cual aceptamos las licitaciones
-diasLimite=11 #26                                           #Plazo para hacer la licitación mínimo
+diasLimite=3 #26                                       #Plazo para hacer la licitación mínimo
 colorEmpleador="#660303"                                #Color en el cual esta escrito el empleador en el correo
 
 # Cargar variables de entorno (.env)
@@ -157,7 +157,7 @@ def filtrado_inicial(licitaciones: list) -> list:
             fecha_limite = datetime.strptime(fecha_limite_str, "%d/%m/%Y")
             dias_restantes = (fecha_limite - hoy).days
             if dias_restantes < diasLimite:
-                print(f" DESCARTADA por fecha: {lic.GetTitulo()} (quedan {dias_restantes} días)")
+                print(f" ❌ DESCARTADA por fecha: {lic.GetTitulo()} (quedan {dias_restantes} días)")
                 continue
         except Exception:
             print(f"⚠️ DESCARTADA por fecha inválida: {lic.GetTitulo()} ({fecha_limite_str})")
@@ -172,7 +172,7 @@ def filtrado_inicial(licitaciones: list) -> list:
         try:
             presupuesto = float(presupuesto_str)
             if presupuesto < presupuestoLimite:
-                print(f" DESCARTADA por presupuesto: {lic.GetTitulo()} ({presupuesto:.2f} €)")
+                print(f" ❌ DESCARTADA por presupuesto: {lic.GetTitulo()} ({presupuesto:.2f} €)")
                 continue
         except Exception:
             print(f"⚠️ DESCARTADA por presupuesto inválido: {lic.GetTitulo()} ({lic.GetPresupuesto()})")
@@ -243,7 +243,7 @@ def descargar_pdfs_por_href(licitacion, carpeta_base="pdfs"):
                             licitacion.SetTecniques(destino)
 
                         if os.path.exists(destino):
-                            print(f" Ya existe: {destino}")
+                            print(f" ❌ Ya existia: {destino}")
                             continue
                         try:
                             headers = {"User-Agent": "Mozilla/5.0"}
@@ -353,7 +353,7 @@ def main():
     print(f"\n📋 Se conservan {len(licitaciones_filtradas)} licitaciones después del primer filtrado")
     licitaciones_filtradas = filtrar_por_tematicas(licitaciones_filtradas, prompts)
     print(f"\n📋 Se conservan {len(licitaciones_filtradas)} licitaciones después del segundo filtrado")
-
+    print(f"\n Descargando los pdfs administrativos y técnicos de la pagina web")
     # Scrapping de las restantes
     for lic in licitaciones_filtradas:
         if lic.GetAdministratives() and os.path.exists(lic.GetAdministratives()) and \
@@ -367,12 +367,19 @@ def main():
             print(f"❌ Error al procesar licitación: {lic.GetTitulo()} — {e}")
 
     todas_licitaciones = licitaciones_guardadas + licitaciones_filtradas
-    guardar_licitaciones_csv(todas_licitaciones, csv_path)
-    print(f"✅ Datos guardados en {csv_path}")
+
+    respuesta = input("¿Quieres guardar las licitaciones en un archivo CSV? (y/n): ").strip().lower()
+
+    if respuesta == "y" and os.path.exists(csv_path):
+        guardar_licitaciones_csv(todas_licitaciones, csv_path)
+        print(f"✅ Datos guardados en {csv_path}")
+    else:
+        print(f"✅ No se guardará este resultado")
+
 
     prompts = cargar_prompts_desde_txt()
     for lic in todas_licitaciones:
-        print(f"\n📝 Procesando: {lic.GetTitulo()}")
+        print(f"\n📝 Procesando licitación: {lic.GetTitulo()}")
 
         # Requisitos Administrativos
         ruta_admin = lic.GetResumenAdministrativo()

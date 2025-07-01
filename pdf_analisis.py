@@ -1,6 +1,7 @@
 import os
 from openai import OpenAI
 import fitz  # PyMuPDF
+import time
 import os
 import re
 import fitz  # PyMuPDF
@@ -52,11 +53,10 @@ def leer_contenido_pdf(rutas_pdf: list[str]) -> str:
 
 def openAIRequest(licitacion, tipo_prompt, prompts) -> str:
 
-
-    #Coge el archivo necesario para lo que quiere hacer
-    if tipo_prompt == "requisitos_tecnicos":    #Resumen del PDF tecnico
+    # Coge el archivo necesario para lo que quiere hacer
+    if tipo_prompt == "requisitos_tecnicos":
         contenido = leer_contenido_pdf([licitacion.GetTecniques()])
-    elif tipo_prompt == "requisitos_administrativos":   #Resumen del PDF administrativo
+    elif tipo_prompt == "requisitos_administrativos":
         contenido = leer_contenido_pdf([licitacion.GetAdministratives()])
     elif tipo_prompt == "evaluar_adecuacion":
         contenido = licitacion.GetTitulo()
@@ -73,59 +73,63 @@ def openAIRequest(licitacion, tipo_prompt, prompts) -> str:
         except Exception as e:
             return f"❌ Error al leer los archivos de resumen: {e}"
     elif tipo_prompt == "filtro_tematicas":
-        contenido=""
-        for lic in licitacion:
-            contenido.join(lic.getTitulo()+"\n")
-
+        contenido = "\n".join(lic.getTitulo() for lic in licitacion)
     else:
         raise ValueError("Tipo de prompt no válido")
 
     if not contenido:
         return "❌ No se pudo extraer texto útil de los PDFs."
 
-    # Fragmentar el contenido en partes de hasta 10,000 caracteres (~3000 tokens)
-    fragmentos = dividir_contenido(contenido, max_longitud=10000)
+    fragmentos = dividir_contenido(contenido, max_longitud=15000)
     subresultados = []
     print(f"📄 Fragmentando documento en {len(fragmentos)} partes...")
 
-    #Si no cabe en una misma request hay que dividirlo en fragmentos
-    if len(fragmentos)>1:
-        # Prompt para fragmentos
+    if len(fragmentos) > 1:
         prompt_fragmento = prompts.get(f"{tipo_prompt}_fragmento", {}).get("prompt", "")
-
         for i, fragmento in enumerate(fragmentos):
             if not prompt_fragmento:
                 print("⚠️ Prompt para fragmentos no encontrado.")
                 return "❌ Falta el prompt para análisis por fragmento."
 
-            prompt = prompt_fragmento.replace("{n}", f"{i + 1}/{len(fragmentos)}") + "\n\n" + fragmento
+            prompt = (
+                prompt_fragmento
+                .replace("{n}", f"{i + 1}/{len(fragmentos)}")
+                .replace("{contenido}", fragmento)
+            )
             print(f"🔹 Enviando fragmento {i + 1}/{len(fragmentos)}...")
 
-            try:
-                response = client.chat.completions.create(
-                    model="gpt-4",
-                    messages=[{"role": "user", "content": prompt}],
-                    temperature=0.3,
-                    max_tokens=1500
-                )
-                subresultados.append(response.choices[0].message.content.strip())
-            except Exception as e:
-                subresultados.append(f"❌ Error en fragmento {i + 1}: {e}")
+            MAX_RETRIES = 3
+            WAIT_SECONDS = 5
 
+            for intento in range(MAX_RETRIES):
+                try:
+                    response = client.chat.completions.create(
+                        model="gpt-4",
+                        messages=[{"role": "user", "content": prompt}],
+                        temperature=0.3,
+                        max_tokens=1500
+                    )
+                    subresultados.append(response.choices[0].message.content.strip())
+                    break
+                except Exception as e:
+                    print(f"⚠️ Error en intento {intento + 1}/{MAX_RETRIES}: {e}")
+                    if intento < MAX_RETRIES - 1:
+                        wait = WAIT_SECONDS * (2 ** intento)
+                        print(f"⏳ Reintentando en {wait} segundos...")
+                        time.sleep(wait)
+                    else:
+                        print(f"❌ Error crítico en fragmento {i + 1}: {e}")
+                        return f"❌ Error al procesar fragmento {i + 1}: {e}"
 
         print("🧠 Generando análisis final estructurado...")
-
-        # Juntar todos los subresultados y ver si caben en una sola síntesis
         resumen_total = "\n\n---\n\n".join(subresultados)
-        MAX_PROMPT_CHARS = 20000  # ~6-7k tokens
+        MAX_PROMPT_CHARS = 20000
 
         if len(resumen_total) <= MAX_PROMPT_CHARS:
             print("✅ Juntando directamente todos los subresultados en una sola síntesis final.")
             final_prompt = prompts[tipo_prompt]["prompt"].replace("{contenido}", resumen_total)
         else:
             print("🔁 Fragmento total demasiado largo. Aplicando síntesis en bloques intermedios...")
-
-            # Agrupar en dos bloques
             grupos = [subresultados[:len(subresultados) // 2], subresultados[len(subresultados) // 2:]]
             resumenes_intermedios = []
 
@@ -139,36 +143,48 @@ def openAIRequest(licitacion, tipo_prompt, prompts) -> str:
 
                 prompt_completo = prompt_union.replace("{contenido}", grupo_texto)
 
-                try:
-                    response = client.chat.completions.create(
-                        model="gpt-4",
-                        messages=[{"role": "user", "content": prompt_completo}],
-                        temperature=0.3,
-                        max_tokens=1500
-                    )
-                    resumenes_intermedios.append(response.choices[0].message.content.strip())
-                except Exception as e:
-                    return f"❌ Error en síntesis del grupo {i + 1}: {e}"
+                for intento in range(MAX_RETRIES):
+                    try:
+                        response = client.chat.completions.create(
+                            model="gpt-4",
+                            messages=[{"role": "user", "content": prompt_completo}],
+                            temperature=0.3,
+                            max_tokens=1500
+                        )
+                        resumenes_intermedios.append(response.choices[0].message.content.strip())
+                        break
+                    except Exception as e:
+                        print(f"⚠️ Error en intento {intento + 1}/{MAX_RETRIES} (grupo {i + 1}): {e}")
+                        if intento < MAX_RETRIES - 1:
+                            wait = WAIT_SECONDS * (2 ** intento)
+                            print(f"⏳ Reintentando en {wait} segundos...")
+                            time.sleep(wait)
+                        else:
+                            return f"❌ Error en síntesis del grupo {i + 1}: {e}"
 
-            # Síntesis final de los resúmenes intermedios
             resumen_final_input = "\n\n---\n\n".join(resumenes_intermedios)
             prompt_union = prompts.get(f"{tipo_prompt}_union", {}).get("prompt", "")
             final_prompt = prompt_union.replace("{contenido}", resumen_final_input)
-
     else:
         final_prompt = prompts[tipo_prompt]["prompt"].replace("{contenido}", contenido)
 
-    # Enviar a OpenAI
-    try:
-        final_response = client.chat.completions.create(
-            model="gpt-4",
-            messages=[{"role": "user", "content": final_prompt}],
-            temperature=0.3,
-            max_tokens=1500
-        )
-        return final_response.choices[0].message.content.strip()
-    except Exception as e:
-        return f"❌ Error durante la síntesis final: {e}"
+    for intento in range(3):
+        try:
+            final_response = client.chat.completions.create(
+                model="gpt-4",
+                messages=[{"role": "user", "content": final_prompt}],
+                temperature=0.3,
+                max_tokens=1500
+            )
+            return final_response.choices[0].message.content.strip()
+        except Exception as e:
+            print(f"⚠️ Error en intento final {intento + 1}/3: {e}")
+            if intento < 2:
+                wait = 5 * (2 ** intento)
+                print(f"⏳ Reintentando en {wait} segundos...")
+                time.sleep(wait)
+            else:
+                return f"❌ Error durante la síntesis final: {e}"
 
 def extraer_titulos_filtrados(texto):
     lineas = texto.splitlines()
