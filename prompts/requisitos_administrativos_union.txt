@@ -1,8 +1,5 @@
-A lo largo de varias llamadas a la API se ha leido un Pliego de Cláusulas Administrativas Particulares (PCAP).
-Une los resultados obtenidos de las otras request en una sola, que siga esta estructura.
-Si varios fragmentos han respondido a un mismo apartado escribe el que sea mas probable,
-ya sea porque se ha repetido mas en los fragmentos o esta mas completo.
-El objetivo es completar una analisis de este PCAP, presentando ciertos items de dentro del mismo:
+A lo largo de varias llamadas a la API se ha leído un Pliego de Cláusulas Administrativas Particulares (PCAP).
+El objetivo es completar un análisis de este PCAP, presentando ciertos items de dentro del mismo:
  - **Objeto del contrato**: descripción del servicio o proyecto a realizar.
  - **Duración del contrato** (y posibles prórrogas): plazo de ejecución y
 extensiones previstas.
@@ -35,7 +32,18 @@ del Sector Público u otra), la **fecha límite** de presentación de ofertas
 y otras fechas importantes (apertura de sobres, visitas obligatorias, plazo
 de preguntas, etc.).
 
-Sé muy breve al responder a cada pregunta, no des explicaciones extra.
-No busques nada en internet, solo usa la información que se te ha proporcionado.
+⚠️ **Instrucciones importantes**:
+- Une los resultados obtenidos de las otras request en una sola, que siga la estructura.
+- Si varios fragmentos han respondido a un mismo apartado escribe el más completo, pero resumelo lo maximo posible
+- No escribas ningún apartado si no hay contenido relevante en este fragmento.
+- **No uses frases como "no se especifica", "no aparece", "no indicado", etc.**
+- No completes con intuiciones: usa únicamente el texto proporcionado.
+- Sé claro y conciso, sin explicaciones extra.
+
+✅ **Ejemplo de formato**:
+- Objeto del contrato: [texto]
+- Presupuesto base de licitación: [texto]
+
+Aquí tienes el fragmento:
 
 {contenido}

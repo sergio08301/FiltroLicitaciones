@@ -1,6 +1,5 @@
 Se ha enviado a varias instancias los fragmentos de un **Pliego de Prescripciones Técnicas (PPT)** de una
-licitación. Tu objetivo es unir los resumenes que ha hecho cada uno en un analisis de este PPT,
- presentando ciertos items de dentro del mismo:
+licitación. El objetivo es completar una analisis de este PPT, presentando ciertos items de dentro del mismo:
 - **Descripción detallada del objeto del contrato**: las tareas, servicios o
 productos específicos que se deben proporcionar, según lo descrito en el
 PPT.
@@ -22,5 +21,18 @@ adicional relevante (por ejemplo, si hay planos, tablas de recursos, anexos
 con formularios técnicos a rellenar, muestras o demostraciones requeridas,
 etc.).
 
+⚠️ **Instrucciones importantes**:
+- Une los resultados obtenidos de las otras request en una sola, que siga la estructura.
+- Si varios fragmentos han respondido a un mismo apartado escribe el más completo, pero resumelo lo maximo posible
+- No escribas ningún apartado si no hay contenido relevante en este fragmento.
+- **No uses frases como "no se especifica", "no aparece", "no indicado", etc.**
+- No completes con intuiciones: usa únicamente el texto proporcionado.
+- Sé claro y conciso, sin explicaciones extra.
+
+✅ **Ejemplo de formato**:
+- Descripción detallada del objeto del contrato: [texto]
+- Requisitos técnicos obligatorios: [texto]
+
+Aquí tienes el fragmento:
 
 {contenido}

@@ -24,6 +24,14 @@ def cargar_prompts_desde_txt(ruta_carpeta="prompts") -> dict:
                 prompts[clave] = {"prompt": f.read().strip()}
     return prompts
 
+def es_indice(texto: str) -> bool:
+    # Heurística simple: muchas líneas con formato numerado y pocas frases completas
+    lineas = texto.splitlines()
+    num_lineas = len(lineas)
+    num_items = sum(1 for l in lineas if any(c in l for c in ["1.", "2.", "3.", "I.", "II.", "10.1", "10.2"]))
+    num_puntos = texto.count(".")
+    return num_items > 5 and num_puntos < (num_lineas * 0.5)
+
 def dividir_contenido(texto: str, max_longitud: int = 10000) -> list:
     fragmentos = []
     inicio = 0
@@ -55,9 +63,9 @@ def openAIRequest(licitacion, tipo_prompt, prompts) -> str:
 
     # Coge el archivo necesario para lo que quiere hacer
     if tipo_prompt == "requisitos_tecnicos":
-        contenido = leer_contenido_pdf([licitacion.GetTecniques()])
+        contenido = leer_contenido_pdf([licitacion.GetPDFTecnico()])
     elif tipo_prompt == "requisitos_administrativos":
-        contenido = leer_contenido_pdf([licitacion.GetAdministratives()])
+        contenido = leer_contenido_pdf([licitacion.GetPDFAdministrativo()])
     elif tipo_prompt == "evaluar_adecuacion":
         contenido = licitacion.GetTitulo()
     elif tipo_prompt == "sintesis_requisitos":
@@ -72,8 +80,6 @@ def openAIRequest(licitacion, tipo_prompt, prompts) -> str:
                 contenido = f"--- ADMINISTRATIVO ---\n{contenido_admin}\n\n--- TECNICO ---\n{contenido_tec}"
         except Exception as e:
             return f"❌ Error al leer los archivos de resumen: {e}"
-    elif tipo_prompt == "filtro_tematicas":
-        contenido = "\n".join(lic.getTitulo() for lic in licitacion)
     else:
         raise ValueError("Tipo de prompt no válido")
 
@@ -81,8 +87,12 @@ def openAIRequest(licitacion, tipo_prompt, prompts) -> str:
         return "❌ No se pudo extraer texto útil de los PDFs."
 
     fragmentos = dividir_contenido(contenido, max_longitud=15000)
+
     subresultados = []
     print(f"📄 Fragmentando documento en {len(fragmentos)} partes...")
+
+    MAX_RETRIES = 3
+    WAIT_SECONDS = 5
 
     if len(fragmentos) > 1:
         prompt_fragmento = prompts.get(f"{tipo_prompt}_fragmento", {}).get("prompt", "")
@@ -98,8 +108,6 @@ def openAIRequest(licitacion, tipo_prompt, prompts) -> str:
             )
             print(f"🔹 Enviando fragmento {i + 1}/{len(fragmentos)}...")
 
-            MAX_RETRIES = 3
-            WAIT_SECONDS = 5
 
             for intento in range(MAX_RETRIES):
                 try:
@@ -149,7 +157,7 @@ def openAIRequest(licitacion, tipo_prompt, prompts) -> str:
                             model="gpt-4",
                             messages=[{"role": "user", "content": prompt_completo}],
                             temperature=0.3,
-                            max_tokens=1500
+                            max_tokens=2000
                         )
                         resumenes_intermedios.append(response.choices[0].message.content.strip())
                         break
@@ -168,13 +176,16 @@ def openAIRequest(licitacion, tipo_prompt, prompts) -> str:
     else:
         final_prompt = prompts[tipo_prompt]["prompt"].replace("{contenido}", contenido)
 
-    for intento in range(3):
+    if tipo_prompt == "requisitos_administrativos":
+        final_prompt = final_prompt.replace("{fecha}", licitacion.GetFecha_limite())
+
+    for intento in range(MAX_RETRIES):
         try:
             final_response = client.chat.completions.create(
                 model="gpt-4",
                 messages=[{"role": "user", "content": final_prompt}],
                 temperature=0.3,
-                max_tokens=1500
+                max_tokens=3000
             )
             return final_response.choices[0].message.content.strip()
         except Exception as e:
@@ -185,6 +196,7 @@ def openAIRequest(licitacion, tipo_prompt, prompts) -> str:
                 time.sleep(wait)
             else:
                 return f"❌ Error durante la síntesis final: {e}"
+
 
 def extraer_titulos_filtrados(texto):
     lineas = texto.splitlines()

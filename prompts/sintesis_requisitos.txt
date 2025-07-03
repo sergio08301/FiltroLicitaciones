@@ -1,32 +1,43 @@
-Combina los resultados del análisis del PCAP, PPT y demás documentos de la
-licitación para ofrecer un **resumen integral** de los requisitos y
-condiciones. Organiza la síntesis en secciones claras:
- 1. **Datos generales**: Objeto del contrato, organismo convocante, referencia
+Se han obtenido estos resumenes de una PCAP() y PPT. Sintetiza la información
+ de estos dos resúmenes en una respuesta. Organiza la síntesis en secciones claras:
+- **Datos generales**: Objeto del contrato, organismo convocante, referencia
 de la licitación, presupuesto base (y si aplica, valor estimado), duración y
-prórrogas, plataforma y fecha límite de presentación .
-2. **Requisitos de participación**: Solvencia económica y técnica exigida
+prórrogas, plataforma y fecha límite de presentación.
+- **Requisitos de participación**: Solvencia económica y técnica exigida
 (incluyendo cifras concretas y documentos para acreditarla)
  condiciones para licitar (ej. estar al corriente de obligaciones,
 inscripciones en registros, etc.).
-3. **Criterios de adjudicación**: Listado de criterios con su puntuación;
+- **Criterios de adjudicación**: Listado de criterios con su puntuación;
 separa criterios de **calidad (juicio de valor)** y **criterios automáticos**
  (ej. precio, fórmulas) indicando la ponderación de cada uno.
-4. **Obligaciones del contrato**: Condiciones especiales de ejecución
+- **Obligaciones del contrato**: Condiciones especiales de ejecución
 (sociales, ambientales, de innovación), u otras obligaciones
 (penalizaciones, garantías definitivas, subcontratación permitida, etc.).
-5. **Documentación y forma de presentación**: Qué debe incluir la oferta:
+- **Documentación y forma de presentación**: Qué debe incluir la oferta:
 documentación administrativa (Sobre 1), oferta técnica (Sobre 2) y oferta
 económica (Sobre 3), con cualquier instrucción sobre formato (número de
 copias, firma digital, uso de plataforma, etc.). Menciona también cualquier
 modelo o formulario que deba usarse.
-6. **Normativa aplicable**: Referencias legales que rigen el contrato (LCSP,
+- **Normativa aplicable**: Referencias legales que rigen el contrato (LCSP,
 reglamentos específicos, directivas UE si se citan, etc.).
-7. **Fechas clave**: Fecha límite, fecha de apertura de sobres (si indicada
+- **Fechas clave**: Fecha límite, fecha de apertura de sobres (si indicada
 por fases), plazo de ejecución inicio/fin, y otras fechas relevantes
 (visitas técnicas, período de preguntas).
 Asegúrate de que esta síntesis incluya **todos los detalles importantes** de
 la licitación sin repetir información en exceso. Debe servir como guía para
 verificar que, al preparar la oferta, no se pasa por alto ningún requisito ni
 fecha importante.
+
+⚠️ **Instrucciones importantes**:
+- Une los resultados obtenidos de los otros resúmenes en uno solo, que siga la estructura.
+- **No uses frases como "no se especifica", "no aparece", "no indicado", etc.**
+- No completes con intuiciones: usa únicamente el texto proporcionado.
+- Sé claro y conciso, sin explicaciones extra.
+
+✅ **Ejemplo de formato**:
+- Datos generales: [texto]
+- Requisitos de participación: [texto]
+
+Aquí tienes los resumenes:
 
 {contenido}

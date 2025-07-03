@@ -113,7 +113,7 @@ def extraer_licitaciones_desde_html(html: str) -> list:
 
             # ✅ Solo procesar enlaces válidos de licitaciones
             if not enlace.startswith("https://contractaciopublica.cat/ca/detall-publicacio/estado/"):
-                continue  # Saltar enlaces tipo "feu clic aquí"
+                continue
 
             titulo = tag.get_text(strip=True)
 
@@ -137,8 +137,8 @@ def extraer_licitaciones_desde_html(html: str) -> list:
                 fecha_publicacion=fecha_publicacion,
                 fecha_limite=fecha_limite,
                 presupuesto=presupuesto,
-                administratives="",
-                tecniques=""
+                PDFAdministrativo="",
+                PDFTecnico=""
             )
 
             licitaciones.append(lic)
@@ -238,9 +238,9 @@ def descargar_pdfs_por_href(licitacion, carpeta_base="pdfs"):
                         destino = os.path.join(carpeta_licitacion, nombre_archivo)
 
                         if "administratives" in label_text:
-                            licitacion.SetAdministratives(destino)
+                            licitacion.SetPDFAdministrativo(destino)
                         elif "tècniques" in label_text:
-                            licitacion.SetTecniques(destino)
+                            licitacion.SetPDFTecnico(destino)
 
                         if os.path.exists(destino):
                             print(f" ❌ Ya existia: {destino}")
@@ -260,7 +260,7 @@ def descargar_pdfs_por_href(licitacion, carpeta_base="pdfs"):
 
 def guardar_resumen_en_txt(licitacion, texto, tipo):
     from pathlib import Path
-    carpeta = Path(licitacion.GetAdministratives() or licitacion.GetTecniques()).parent
+    carpeta = Path(licitacion.GetPDFAdministrativo() or licitacion.GetPDFTecnico()).parent
     nombre_archivo = f"resumen_{tipo}.txt"
     ruta_resumen = carpeta / nombre_archivo
 
@@ -272,14 +272,14 @@ def guardar_resumen_en_txt(licitacion, texto, tipo):
     elif tipo == "tecnico":
         licitacion.SetResumenTecnico(str(ruta_resumen))
     elif tipo == "sintesis":
-        licitacion.SetSintesis(str(ruta_resumen))
+        licitacion.SetSintesisRequisitos(str(ruta_resumen))
 
 def guardar_licitaciones_csv(licitaciones, ruta_archivo="licitaciones.csv"):
     with open(ruta_archivo, mode="w", newline="", encoding="utf-8") as archivo:
         writer = csv.writer(archivo)
         writer.writerow([
             "Empleador", "Titulo", "Enlace", "FechaPublicacion",
-            "FechaLimite", "Presupuesto", "Administratives", "Tecniques"
+            "FechaLimite", "Presupuesto", "PDFAdministrativo", "PDFTecnico","ResumenAdministrativo","ResumenAdministrativo","ResumenTecnico","Sintesis"
         ])
         for lic in licitaciones:
             writer.writerow([
@@ -289,8 +289,11 @@ def guardar_licitaciones_csv(licitaciones, ruta_archivo="licitaciones.csv"):
                 lic.GetFecha_publicacion(),
                 lic.GetFecha_limite(),
                 lic.GetPresupuesto(),
-                lic.GetAdministratives(),
-                lic.GetTecniques(),
+                lic.GetPDFAdministrativo(),
+                lic.GetPDFTecnico(),
+                lic.GetResumenAdministrativo(),
+                lic.GetResumenTecnico(),
+                lic.GetSintesisRequisitos()
             ])
 
 def cargar_licitaciones_csv(ruta_archivo="licitaciones.csv"):
@@ -322,7 +325,7 @@ def main():
         licitaciones_guardadas = cargar_licitaciones_csv(csv_path)
         print(f" {len(licitaciones_guardadas)} licitaciones cargadas desde {csv_path}")
     else:
-        print(" Se continuará con el proceso normal (descarga desde correo y scrapping).")
+        print(" Se descargarán desde el correo las licitaciones que se adecuen.")
 
     # Encontrar el correo
     mail = connect_to_email()
@@ -350,14 +353,14 @@ def main():
     #Descarta las que no cumplas ciertos requisitos
     licitaciones_filtradas = filtrado_inicial(nuevas_licitaciones)
     prompts = cargar_prompts_desde_txt()
-    print(f"\n📋 Se conservan {len(licitaciones_filtradas)} licitaciones después del primer filtrado")
+    print(f"\n📋 Se conservan {len(licitaciones_filtradas)} licitaciones después del primer filtrado, de precios y fechas")
     licitaciones_filtradas = filtrar_por_tematicas(licitaciones_filtradas, prompts)
-    print(f"\n📋 Se conservan {len(licitaciones_filtradas)} licitaciones después del segundo filtrado")
+    print(f"\n📋 Se conservan {len(licitaciones_filtradas)} licitaciones después del segundo filtrado, de temáticas")
     print(f"\n Descargando los pdfs administrativos y técnicos de la pagina web")
     # Scrapping de las restantes
     for lic in licitaciones_filtradas:
-        if lic.GetAdministratives() and os.path.exists(lic.GetAdministratives()) and \
-                lic.GetTecniques() and os.path.exists(lic.GetTecniques()):
+        if lic.GetPDFAdministrativo() and os.path.exists(lic.GetPDFAdministrativo()) and \
+                lic.GetPDFTecnico() and os.path.exists(lic.GetPDFTecnico()):
             print(f" Ya existen los PDF para: {lic.GetTitulo()}")
             continue
 
@@ -368,9 +371,9 @@ def main():
 
     todas_licitaciones = licitaciones_guardadas + licitaciones_filtradas
 
-    respuesta = input("¿Quieres guardar las licitaciones en un archivo CSV? (y/n): ").strip().lower()
+    csvsave = input("¿Quieres guardar las licitaciones en un archivo CSV? (y/n): ").strip().lower()
 
-    if respuesta == "y" and os.path.exists(csv_path):
+    if csvsave == "y" and os.path.exists(csv_path):
         guardar_licitaciones_csv(todas_licitaciones, csv_path)
         print(f"✅ Datos guardados en {csv_path}")
     else:

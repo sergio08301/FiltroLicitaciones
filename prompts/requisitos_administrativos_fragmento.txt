@@ -31,21 +31,18 @@ del Sector Público u otra), la **fecha límite** de presentación de ofertas
 y otras fechas importantes (apertura de sobres, visitas obligatorias, plazo
 de preguntas, etc.).
 
-Sé muy breve al responder a cada pregunta, no des explicaciones extra.
-No busques nada en internet, solo usa la información que se te ha proporcionado.
-No incluyas información que esté mencionada solo como parte de un índice, sumario
- o listado de contenidos preliminar. Solo considera como válidos los contenidos desarrollados en este fragmento.
+⚠️ **Instrucciones importantes**:
+- No escribas ningún apartado si no hay contenido relevante en este fragmento.
+- **No uses frases como "no se especifica", "no aparece", "no indicado", etc.**
+- Si un apartado no tiene información, simplemente **no lo muestres**.
+- No incluyas nada que provenga solo de un índice, tabla de contenidos, títulos o referencias a otras secciones.
+- No completes con intuiciones: usa únicamente el texto proporcionado.
+- Sé claro y conciso, sin explicaciones extra.
 
- No escribas ningún apartado si no hay información relevante en el fragmento.
-  Si no hay contenido para un apartado, no lo incluyas en absoluto.
- No uses frases como "no se especifica". Solo incluye los apartados que realmente contengan datos útiles.
+✅ **Ejemplo de formato** (solo si hay datos):
+- Objeto del contrato: [texto]
+- Presupuesto base de licitación: [texto]
 
- Solo responde con los apartados aplicables. Por ejemplo:
-
-- Objeto del contrato: {texto}
-- Presupuesto base de licitación: {texto}
-- ...
-
-Ahi te va tu fragmento del documento:
+Aquí tienes el fragmento:
 
 {contenido}

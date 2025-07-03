@@ -1,18 +1,19 @@
 import csv
 
 class Licitacion:
-    def __init__(self, empleador, titulo, enlace, fecha_publicacion, fecha_limite, presupuesto, administratives, tecniques):
+    def __init__(self, empleador, titulo, enlace, fecha_publicacion, fecha_limite, presupuesto, PDFAdministrativo, PDFTecnico):
         self._empleador = empleador.strip()
         self._titulo = titulo.strip()
         self._enlace = enlace.strip()
         self._fecha_publicacion = fecha_publicacion.strip()
         self._fecha_limite = fecha_limite.strip()
         self._presupuesto = presupuesto.strip()
-        self._administratives = administratives.strip() if administratives else ""
-        self._tecniques = tecniques.strip() if tecniques else ""
-        self._resumen_administrativo = ""
-        self._resumen_tecnico = ""
-        self._sintesis = ""
+        self._PDFAdministrativo = PDFAdministrativo.strip() if PDFAdministrativo else ""
+        self._PDFTecnico = PDFTecnico.strip() if PDFTecnico else ""
+        # Tras llamada a la API
+        self._ResumenAdministrativo = ""
+        self._ResumenTecnico = ""
+        self._SintesisRequisitos = ""
 
     # Getters
     def GetEmpleador(self):
@@ -33,20 +34,20 @@ class Licitacion:
     def GetPresupuesto(self):
         return self._presupuesto
 
-    def GetAdministratives(self):
-        return self._administratives
+    def GetPDFAdministrativo(self):
+        return self._PDFAdministrativo
 
-    def GetTecniques(self):
-        return self._tecniques
+    def GetPDFTecnico(self):
+        return self._PDFTecnico
 
     def GetResumenAdministrativo(self):
-        return self._resumen_administrativo
+        return self._ResumenAdministrativo
 
     def GetResumenTecnico(self):
-        return self._resumen_tecnico
+        return self._ResumenTecnico
 
-    def GetSintesis(self):
-        return self._sintesis
+    def GetSintesisRequisitos(self):
+        return self._SintesisRequisitos
 
     # Setters
     def SetEmpleador(self, nuevo_empleador):
@@ -67,20 +68,20 @@ class Licitacion:
     def SetPresupuesto(self, nuevo_presupuesto):
         self._presupuesto = nuevo_presupuesto
 
-    def SetAdministratives(self, nuevo_administratives):
-        self._administratives = nuevo_administratives
+    def SetPDFAdministrativo(self, nuevo_path):
+        self._PDFAdministrativo = nuevo_path
 
-    def SetTecniques(self, nuevo_tecniques):
-        self._tecniques = nuevo_tecniques
+    def SetPDFTecnico(self, nuevo_path):
+        self._PDFTecnico = nuevo_path
 
-    def SetResumenTecnico(self, path):
-        self._resumen_tecnico = path
+    def SetResumenAdministrativo(self, resumen_path):
+        self._ResumenAdministrativo = resumen_path
 
-    def SetResumenAdministrativo(self, path):
-        self._resumen_administrativo = path
+    def SetResumenTecnico(self, resumen_path):
+        self._ResumenTecnico = resumen_path
 
-    def SetSintesis(self, path):
-        self._sintesis = path
+    def SetSintesisRequisitos(self, resumen_path):
+        self._SintesisRequisitos = resumen_path
 
 
     def to_print(self):
@@ -91,7 +92,9 @@ class Licitacion:
         Publicada el: {self._fecha_publicacion}
         Fecha límite: {self._fecha_limite}
         Presupuesto: {self._presupuesto}
-        Administratives: {self._administratives}
-        Tecniques: {self._tecniques}
-        
+        PDF Administrativo: {self._PDFAdministrativo}
+        PDF Técnico: {self._PDFTecnico}
+        Resumen Administrativo: {self._ResumenAdministrativo}
+        Resumen Técnico: {self._ResumenTecnico}
+        Síntesis Requisitos: {self._SintesisRequisitos}
         """
