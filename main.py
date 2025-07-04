@@ -1,5 +1,7 @@
 import csv
 import email
+import sys
+from pathlib import Path
 from dotenv import load_dotenv
 import os
 import imaplib
@@ -21,7 +23,7 @@ from pdf_analisis import openAIRequest, cargar_prompts_desde_txt, filtrar_por_te
 dias= 30                                                #dias que puede ir atrás en correo para buscar licitaciones
 asunto= "Correu diari de subscriptors generals"         #Asunto que quieres buscar en los correos
 presupuestoLimite=500000                                #Precio minimo por el cual aceptamos las licitaciones
-diasLimite=3 #26                                       #Plazo para hacer la licitación mínimo
+diasLimite=1 #26                                       #Plazo para hacer la licitación mínimo
 colorEmpleador="#660303"                                #Color en el cual esta escrito el empleador en el correo
 
 # Cargar variables de entorno (.env)
@@ -136,9 +138,7 @@ def extraer_licitaciones_desde_html(html: str) -> list:
                 enlace=enlace,
                 fecha_publicacion=fecha_publicacion,
                 fecha_limite=fecha_limite,
-                presupuesto=presupuesto,
-                PDFAdministrativo="",
-                PDFTecnico=""
+                presupuesto=presupuesto
             )
 
             licitaciones.append(lic)
@@ -275,26 +275,36 @@ def guardar_resumen_en_txt(licitacion, texto, tipo):
         licitacion.SetSintesisRequisitos(str(ruta_resumen))
 
 def guardar_licitaciones_csv(licitaciones, ruta_archivo="licitaciones.csv"):
-    with open(ruta_archivo, mode="w", newline="", encoding="utf-8") as archivo:
-        writer = csv.writer(archivo)
-        writer.writerow([
-            "Empleador", "Titulo", "Enlace", "FechaPublicacion",
-            "FechaLimite", "Presupuesto", "PDFAdministrativo", "PDFTecnico","ResumenAdministrativo","ResumenAdministrativo","ResumenTecnico","Sintesis"
-        ])
-        for lic in licitaciones:
+    from pathlib import Path
+    ruta = Path(ruta_archivo).resolve()
+    os.makedirs(ruta.parent, exist_ok=True)
+
+    try:
+        with open(ruta, mode="w", newline="", encoding="utf-8") as archivo:
+            writer = csv.writer(archivo)
             writer.writerow([
-                lic.GetEmpleador(),
-                lic.GetTitulo(),
-                lic.GetEnlace(),
-                lic.GetFecha_publicacion(),
-                lic.GetFecha_limite(),
-                lic.GetPresupuesto(),
-                lic.GetPDFAdministrativo(),
-                lic.GetPDFTecnico(),
-                lic.GetResumenAdministrativo(),
-                lic.GetResumenTecnico(),
-                lic.GetSintesisRequisitos()
+                "Empleador", "Titulo", "Enlace", "FechaPublicacion",
+                "FechaLimite", "Presupuesto", "PDFAdministrativo", "PDFTecnico",
+                "ResumenAdministrativo", "ResumenTecnico", "SintesisRequisitos"
             ])
+            for lic in licitaciones:
+                writer.writerow([
+                    lic.GetEmpleador(),
+                    lic.GetTitulo(),
+                    lic.GetEnlace(),
+                    lic.GetFecha_publicacion(),
+                    lic.GetFecha_limite(),
+                    lic.GetPresupuesto(),
+                    lic.GetPDFAdministrativo(),
+                    lic.GetPDFTecnico(),
+                    lic.GetResumenAdministrativo(),
+                    lic.GetResumenTecnico(),
+                    lic.GetSintesisRequisitos()
+                ])
+
+        print(f"✅ CSV guardado en: {ruta}")
+    except Exception as e:
+        print(f"❌ Error al guardar CSV en {ruta}: {e}")
 
 def cargar_licitaciones_csv(ruta_archivo="licitaciones.csv"):
     licitaciones = []
@@ -302,114 +312,336 @@ def cargar_licitaciones_csv(ruta_archivo="licitaciones.csv"):
         reader = csv.DictReader(archivo)
         for fila in reader:
             lic = Licitacion(
-                fila["Empleador"],
-                fila["Titulo"],
-                fila["Enlace"],
-                fila["FechaPublicacion"],
-                fila["FechaLimite"],
-                fila["Presupuesto"],
-                fila.get("Administratives", "").strip() or None,
-                fila.get("Tecniques", "").strip() or None
+                empleador=fila["Empleador"],
+                titulo=fila["Titulo"],
+                enlace=fila["Enlace"],
+                fecha_publicacion=fila["FechaPublicacion"],
+                fecha_limite=fila["FechaLimite"],
+                presupuesto=fila["Presupuesto"]
             )
+
+            # Asignar documentos opcionales si existen
+            lic.SetPDFAdministrativo(fila.get("PDFAdministrativo", "").strip())
+            lic.SetPDFTecnico(fila.get("PDFTecnico", "").strip())
+            lic.SetResumenAdministrativo(fila.get("ResumenAdministrativo", "").strip())
+            lic.SetResumenTecnico(fila.get("ResumenTecnico", "").strip())
+            lic.SetSintesisRequisitos(fila.get("SintesisRequisitos", "").strip())
+            lic.SetIntroduccionOferta(fila.get("IntroduccionOferta", "").strip())
+            lic.SetMemoriaTecnica(fila.get("MemoriaTecnica", "").strip())
+            lic.SetCriteriosSocialesMedioambientales(fila.get("CriteriosSocialesMedioambientales", "").strip())
+            lic.SetPropuestaEconomica(fila.get("PropuestaEconomica", "").strip())
+            lic.SetDocumentacionAdministrativaSolvencia(fila.get("DocumentacionAdministrativaSolvencia", "").strip())
+
             licitaciones.append(lic)
     return licitaciones
 
-def main():
+def seleccionar_licitaciones_manualmente(licitaciones_extraidas, csv_path):
+    seleccionadas = []
+    while True:
+        print("\n📋 Licitaciones disponibles:")
+        for idx, lic in enumerate(licitaciones_extraidas, start=1):
+            print(f"{idx}. {lic.GetTitulo()}")
 
-    csv_path = "licitaciones.csv"
-    licitaciones_guardadas = []
+        seleccion = input("Escribe el número de la licitación a añadir (o 'q' para salir): ").strip().lower()
+        if seleccion == "q":
+            break
 
-    respuesta = input("¿Quieres cargar las licitaciones desde archivo CSV? (y/n): ").strip().lower()
+        try:
+            idx = int(seleccion) - 1
+            if 0 <= idx < len(licitaciones_extraidas):
+                seleccionadas.append(licitaciones_extraidas[idx])
+                print(f"✅ Añadida: {licitaciones_extraidas[idx].GetTitulo()}")
+            else:
+                print("❌ Número fuera de rango.")
+        except ValueError:
+            print("⚠️ Entrada no válida. Escribe un número o 'q'.")
 
-    if respuesta == "y" and os.path.exists(csv_path):
-        licitaciones_guardadas = cargar_licitaciones_csv(csv_path)
-        print(f" {len(licitaciones_guardadas)} licitaciones cargadas desde {csv_path}")
+    if seleccionadas:
+        guardar_licitaciones_csv_con_check(seleccionadas, csv_path)
+        print(f"✅ {len(seleccionadas)} licitaciones guardadas en {csv_path}")
     else:
-        print(" Se descargarán desde el correo las licitaciones que se adecuen.")
+        print("📂 No se añadieron licitaciones.")
 
-    # Encontrar el correo
-    mail = connect_to_email()
-    mensaje = buscar_correo_por_asunto(mail, asunto)
-    mail.logout()
-    if not mensaje:
-        print("❌ No se encontró ningún correo reciente con ese asunto.")
-        return
-    #Convertir las licitaciones del correo en objetos licitacion
-    html = extraer_html_del_mensaje(mensaje)
-    if not html:
-        print("⚠️ No se pudo extraer HTML del correo.")
-        return
-
-    licitaciones_extraidas = extraer_licitaciones_desde_html(html)
-    print(f"\n📋 Se detectaron {len(licitaciones_extraidas)} licitaciones del correo")
-
-    # Ignorar las cargadas del csv
-    enlaces_existentes = {l.GetEnlace() for l in licitaciones_guardadas}
-    nuevas_licitaciones = [
-        l for l in licitaciones_extraidas if l.GetEnlace() not in enlaces_existentes
-    ]
-    print(f"📥 Nuevas licitaciones detectadas: {len(nuevas_licitaciones)}")
-
-    #Descarta las que no cumplas ciertos requisitos
-    licitaciones_filtradas = filtrado_inicial(nuevas_licitaciones)
-    prompts = cargar_prompts_desde_txt()
-    print(f"\n📋 Se conservan {len(licitaciones_filtradas)} licitaciones después del primer filtrado, de precios y fechas")
-    licitaciones_filtradas = filtrar_por_tematicas(licitaciones_filtradas, prompts)
-    print(f"\n📋 Se conservan {len(licitaciones_filtradas)} licitaciones después del segundo filtrado, de temáticas")
+def scrapping_de_pdfs(licitaciones):
     print(f"\n Descargando los pdfs administrativos y técnicos de la pagina web")
-    # Scrapping de las restantes
-    for lic in licitaciones_filtradas:
+    # Scrapping de la web para obtener PDFS
+    for lic in licitaciones:
         if lic.GetPDFAdministrativo() and os.path.exists(lic.GetPDFAdministrativo()) and \
                 lic.GetPDFTecnico() and os.path.exists(lic.GetPDFTecnico()):
             print(f" Ya existen los PDF para: {lic.GetTitulo()}")
             continue
-
         try:
             descargar_pdfs_por_href(lic)
         except Exception as e:
             print(f"❌ Error al procesar licitación: {lic.GetTitulo()} — {e}")
 
-    todas_licitaciones = licitaciones_guardadas + licitaciones_filtradas
+def pedir_documentacion(lic, tipo):
 
-    csvsave = input("¿Quieres guardar las licitaciones en un archivo CSV? (y/n): ").strip().lower()
-
-    if csvsave == "y" and os.path.exists(csv_path):
-        guardar_licitaciones_csv(todas_licitaciones, csv_path)
-        print(f"✅ Datos guardados en {csv_path}")
-    else:
-        print(f"✅ No se guardará este resultado")
-
+    #Tipo: adminsitrativo, tecnico, sintesis
+    match tipo:
+        case "administrativo":
+            ruta = lic.GetResumenAdministrativo()
+            tipo_prompt="requisitos_administrativos"
+        case "tecnico":
+            ruta = lic.GetResumenTecnico()
+            tipo_prompt = "requisitos_tecnicos"
+        case "sintesis":
+            ruta = lic.GetSintesisRequisitos()
+            tipo_prompt = "sintesis_requisitos"
+        case "introduccion":
+            ruta = lic.GetSintesisRequisitos()
+            tipo_prompt = "introduccion"
+        case "memoria tecnica":
+            ruta = lic.GetSintesisRequisitos()
+            tipo_prompt = "memoria_tecnica"
+        case "social/medioambiental":
+            ruta = lic.GetSintesisRequisitos()
+            tipo_prompt = "social_medioambiental"
+        case "propuesta economica":
+            ruta = lic.GetSintesisRequisitos()
+            tipo_prompt = "propuesta_economica"
+        case "administrativa/solvencia":
+            ruta = lic.GetSintesisRequisitos()
+            tipo_prompt = "administrativa_solvencia"
+        case _:
+            print("Otro")#TODO implementar
 
     prompts = cargar_prompts_desde_txt()
-    for lic in todas_licitaciones:
-        print(f"\n📝 Procesando licitación: {lic.GetTitulo()}")
+    print(f"\n📝 Procesando licitación: {lic.GetTitulo()}")
 
-        # Requisitos Administrativos
-        ruta_admin = lic.GetResumenAdministrativo()
-        if ruta_admin and os.path.exists(ruta_admin):
-            print("📄 Ya existe el resumen administrativo, se omite.")
-        else:
-            resultado_admin = openAIRequest(lic, "requisitos_administrativos", prompts)
-            guardar_resumen_en_txt(lic, resultado_admin, "administrativo")
-            print("✅ Resumen administrativo generado y guardado.")
+    # Omitir si ya existe
+    if ruta and os.path.exists(ruta):
+        print("📄 Ya existe el documento "+tipo+", se omite.")
+    else:
+        #Request a la API
+        resultado = openAIRequest(lic, tipo_prompt, prompts)
+        guardar_resumen_en_txt(lic, resultado, tipo)
+        print("✅ Documento"+tipo+" generado y guardado.")
 
-        # Requisitos Técnicos
-        ruta_tec = lic.GetResumenTecnico()
-        if ruta_tec and os.path.exists(ruta_tec):
-            print("📄 Ya existe el resumen técnico, se omite.")
-        else:
-            resultado_tec = openAIRequest(lic, "requisitos_tecnicos", prompts)
-            guardar_resumen_en_txt(lic, resultado_tec, "tecnico")
-            print("✅ Resumen técnico generado y guardado.")
 
-        # Síntesis Combinada
-        ruta_sintesis = lic.GetSintesis()
-        if ruta_sintesis and os.path.exists(ruta_sintesis):
-            print("📄 Ya existe la síntesis, se omite.")
+def silenciar_prints(func, *args, **kwargs):
+    """Ejecuta func en silencio"""
+    original_stdout = sys.stdout
+    sys.stdout = open(os.devnull, 'w')  # Redirige prints a /dev/null
+    try:
+        result = func(*args, **kwargs)
+    finally:
+        sys.stdout.close()
+        sys.stdout = original_stdout  # Restaura salida normal
+    return result
+
+def guardar_licitaciones_csv_con_check(licitaciones, ruta_archivo="licitaciones.csv"):
+    ruta = Path(ruta_archivo)
+    if ruta.exists():
+        print(f"⚠️ El archivo {ruta_archivo} ya existe.")
+        decision = input("¿Quieres sobrescribirlo (1), añadir nuevas licitaciones al documento(2) o cancelar (3)? [1/2/3]: ").strip().lower()
+
+        if decision == "3":
+            print("❌ Operación cancelada. No se ha guardado nada.")
+            return
+        elif decision == "2":
+            print("➕ Añadiendo nuevas licitaciones al archivo existente...")
+            licitaciones_existentes = cargar_licitaciones_csv(ruta_archivo)
+
+            # Evitar duplicados usando los enlaces como identificador único
+            enlaces_existentes = {lic.GetEnlace() for lic in licitaciones_existentes}
+            nuevas_licitaciones = [lic for lic in licitaciones if lic.GetEnlace() not in enlaces_existentes]
+
+            print(f"📥 Nuevas licitaciones detectadas: {len(nuevas_licitaciones)}")
+
+            licitaciones_combinadas = licitaciones_existentes + nuevas_licitaciones
+            guardar_licitaciones_csv(licitaciones_combinadas, ruta_archivo)
+            print(f"✅ Archivo actualizado con {len(licitaciones_combinadas)} licitaciones en total.")
+            return
+        elif decision == "1":
+            guardar_licitaciones_csv(licitaciones, ruta_archivo)
+            print(f"✅ Archivo guardado: {ruta_archivo}")
+            return
         else:
-            resultado_sintesis = openAIRequest(lic, "sintesis_requisitos", prompts)
-            guardar_resumen_en_txt(lic, resultado_sintesis, "sintesis")
-            print("✅ Síntesis generada y guardada.")
+            print("⚠️ Opción no válida. Operación cancelada.")
+            return
+    else:
+        guardar_licitaciones_csv(licitaciones, ruta_archivo)
+        print(f"✅ Archivo creado: {ruta_archivo}")
+
+
+def main():
+
+    csv_path = csv_path = Path(__file__).parent / "licitaciones.csv"
+
+    licitaciones_guardadas = []
+
+    respuesta = input("¿Quieres buscar nuevas licitaciones (1) o trabajar con las que ya tienes en tu archivo (2)? (1/2): ").strip().lower()
+
+    if respuesta == "2" and not os.path.exists(csv_path):
+        print(f" Genera antes un archivo con las licitaciones con las cuales quieres trabajar")
+    elif respuesta == "2" and os.path.exists(csv_path):
+        licitaciones_guardadas = cargar_licitaciones_csv(csv_path)
+        print(f" {len(licitaciones_guardadas)} licitaciones cargadas desde {csv_path}")
+
+        accion = input("""
+            ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+            📂 ¿Qué archivos quieres generar? (Introduce el número)
+            ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+            
+              1️⃣  Generar todos los documentos
+              2️⃣  Descargar los plecs administrativos y técnicos
+              3️⃣  Resumir los plecs administrativos y técnicos
+              4️⃣  Crear una síntesis de los requisitos
+              5️⃣  Redactar la introducción de la oferta
+              6️⃣  Elaborar la memoria técnica
+              7️⃣  Desarrollar los criterios sociales y medioambientales
+              8️⃣  Preparar la propuesta económica
+              9️⃣  Compilar documentación administrativa y de solvencia
+             🔟  Cambiar de licitación o grupo de licitaciones
+            
+            ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+            """)
+
+        match accion:
+            case '1':
+                scrapping_de_pdfs(licitaciones_guardadas)
+                for lic in licitaciones_guardadas:
+                    pedir_documentacion(lic, "administrativo")
+                    pedir_documentacion(lic, "tecnico")
+                    pedir_documentacion(lic, "sintesis")
+                    pedir_documentacion(lic, "introduccion")
+                    pedir_documentacion(lic, "memoria tecnica")
+                    pedir_documentacion(lic, "social_medioambiental")
+                    pedir_documentacion(lic, "propuesta_economica")
+                    pedir_documentacion(lic, "administrativa_solvencia")
+
+            case '2':
+                scrapping_de_pdfs(licitaciones_guardadas)
+
+            case '3':
+                print("Iniciando pasos previos para cumplir tu peticion")
+                silenciar_prints(scrapping_de_pdfs, licitaciones_guardadas)
+                print("Pasos previos completados")
+                for lic in licitaciones_guardadas:
+                    pedir_documentacion(lic, "administrativo")
+                    pedir_documentacion(lic, "tecnico")
+
+            case '4':
+                print("Iniciando pasos previos para cumplir tu peticion")
+                silenciar_prints(scrapping_de_pdfs, licitaciones_guardadas)
+                for lic in licitaciones_guardadas:
+                    silenciar_prints(pedir_documentacion(lic, "adminsitrativo"))
+                    silenciar_prints(pedir_documentacion(lic, "tecnico"))
+                    pedir_documentacion(lic, "sintesis")
+
+            case '5':
+                print("Iniciando pasos previos para cumplir tu peticion")
+                silenciar_prints(scrapping_de_pdfs, licitaciones_guardadas)
+                for lic in licitaciones_guardadas:
+                    silenciar_prints(pedir_documentacion(lic, "adminsitrativo"))
+                    silenciar_prints(pedir_documentacion(lic, "tecnico"))
+                    silenciar_prints(pedir_documentacion(lic, "sintesis"))
+                    pedir_documentacion(lic,"introduccion")
+            case '6':
+                print("Iniciando pasos previos para cumplir tu peticion")
+                silenciar_prints(scrapping_de_pdfs, licitaciones_guardadas)
+                for lic in licitaciones_guardadas:
+                    silenciar_prints(pedir_documentacion(lic, "adminsitrativo"))
+                    silenciar_prints(pedir_documentacion(lic, "tecnico"))
+                    silenciar_prints(pedir_documentacion(lic, "sintesis"))
+                    pedir_documentacion(lic, "memoria tecnica")
+            case '7':
+                print("Iniciando pasos previos para cumplir tu peticion")
+                silenciar_prints(scrapping_de_pdfs, licitaciones_guardadas)
+                for lic in licitaciones_guardadas:
+                    silenciar_prints(pedir_documentacion(lic, "adminsitrativo"))
+                    silenciar_prints(pedir_documentacion(lic, "tecnico"))
+                    silenciar_prints(pedir_documentacion(lic, "sintesis"))
+                    pedir_documentacion(lic, "social_medioambiental")
+            case '8':
+                print("Iniciando pasos previos para cumplir tu peticion")
+                silenciar_prints(scrapping_de_pdfs, licitaciones_guardadas)
+                for lic in licitaciones_guardadas:
+                    silenciar_prints(pedir_documentacion(lic, "adminsitrativo"))
+                    silenciar_prints(pedir_documentacion(lic, "tecnico"))
+                    silenciar_prints(pedir_documentacion(lic, "sintesis"))
+                    pedir_documentacion(lic, "propuesta_economica")
+            case '9':
+                print("Iniciando pasos previos para cumplir tu peticion")
+                silenciar_prints(scrapping_de_pdfs, licitaciones_guardadas)
+                for lic in licitaciones_guardadas:
+                    silenciar_prints(pedir_documentacion(lic, "adminsitrativo"))
+                    silenciar_prints(pedir_documentacion(lic, "tecnico"))
+                    silenciar_prints(pedir_documentacion(lic, "sintesis"))
+                    pedir_documentacion(lic, "administrativa_solvencia")
+            case'10':
+                print("Iniciando pasos previos para cumplir tu peticion")
+                silenciar_prints(scrapping_de_pdfs, licitaciones_guardadas)
+                for lic in licitaciones_guardadas:
+                    pedir_documentacion(lic, "adminsitrativo")
+                    pedir_documentacion(lic, "tecnico")
+                    pedir_documentacion(lic, "sintesis")
+                    pedir_documentacion(lic, "introduccion")
+            case _:
+                print("No te he entendido, di de nuevo el numero de documento que necesitas")#TODO implementar
+
+
+        guardar_licitaciones_csv(licitaciones_guardadas, csv_path)
+        print(f"✅ Datos actualizados en {csv_path}")
+
+        print(
+            "Acuerdate de revisar tus documentos en la carpeta de licitaciones, y si quieres continuar carga "+{csv_path}+
+            "\n Recuerda que estos documentos estan generados automaticamente, asi que pueden requerir revision humana antes de usarlos para algun tramite importante")
+
+    elif respuesta=="1":
+        print(" Se descargarán desde el correo las licitaciones que se adecuen.")
+
+        # Encontrar el correo
+        mail = connect_to_email()
+        mensaje = buscar_correo_por_asunto(mail, asunto)
+        mail.logout()
+        if not mensaje:
+            print("❌ No se encontró ningún correo reciente con ese asunto.")
+            return
+        # Convertir las licitaciones del correo en objetos licitacion
+        html = extraer_html_del_mensaje(mensaje)
+        if not html:
+            print("⚠️ No se pudo extraer HTML del correo.")
+            return
+
+        licitaciones_extraidas = extraer_licitaciones_desde_html(html)
+        print(f"\n📋 Se detectaron {len(licitaciones_extraidas)} licitaciones del correo")
+
+        respuesta = input(
+            "¿Quieres que se escoja automáticamente las licitaciones que te interesan mediante las características definidas (1) o quieres escoger a mano (2)? (1/2): "
+        ).strip()
+
+        if respuesta == "1":
+            licitaciones_filtradas = filtrado_inicial(licitaciones_extraidas)
+            prompts = cargar_prompts_desde_txt()
+            print(
+                f"\n📋 Se conservan {len(licitaciones_filtradas)} licitaciones después del primer filtrado (precios y fechas)")
+            licitaciones_filtradas = filtrar_por_tematicas(licitaciones_filtradas, prompts)
+            print(
+                f"\n📋 Se conservan {len(licitaciones_filtradas)} licitaciones después del segundo filtrado (temáticas)")
+
+            guardar_licitaciones_csv_con_check(licitaciones_filtradas, csv_path)
+            print(f"✅ Datos actualizados en {csv_path}")
+
+            for lic in licitaciones_filtradas:
+                print(f"✅ {lic.GetTitulo()}")
+
+            respuesta = input("¿Quieres escoger manualmente alguna más? (y/n): ").strip().lower()
+            if respuesta == "y":
+                seleccionar_licitaciones_manualmente(licitaciones_extraidas, csv_path)
+            else:
+                print("👋 Proceso completado.")
+                guardar_licitaciones_csv(licitaciones_filtradas,csv_path)
+                return
+
+        elif respuesta == "2":
+            seleccionar_licitaciones_manualmente(licitaciones_extraidas, csv_path)
+
+        else:
+            print("⚠️ Opción no reconocida. Cancelando.")
+    else:
+        print("⚠️ Opción no reconocida. Cancelando.")
 
 
 if __name__ == "__main__":
