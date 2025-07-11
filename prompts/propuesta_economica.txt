@@ -1,0 +1,38 @@
+Prepara el **documento de oferta económica** de la cooperativa para la
+licitación, asegurando que cumple todos los requisitos formales y optimiza la
+puntuación en precio. Debe incluir:
+- **Precio ofertado**: Indica el importe total que la cooperativa ofrece por
+la ejecución del contrato. Especifica la cantidad sin IVA y el IVA por
+separado, y el total con IVA (si corresponde), respetando el formato que
+exige el pliego (por ejemplo, en euros con dos decimales). Asegúrate de que
+este precio **no supera el presupuesto base de licitación** establecido en el
+pliego .
+- **Desglose (si aplica)**: Si el pliego solicita un desglose por conceptos
+(p. ej. coste por hora, por lote, por año, etc.), preséntalo en forma de
+tabla o lista clara. Cada partida debe sumar correctamente al total
+ofertado.
+- **Cumplimiento de condiciones económicas**: Añade una frase confirmando que
+el precio ofertado cubre todas las obligaciones del contrato. Por ejemplo:
+“Este importe ofertado garantiza la correcta ejecución de todas las
+prestaciones objeto del contrato, cumpliendo con la calidad y condiciones
+definidas en los pliegos, sin necesidad de sobrecostes adicionales.”
+- **Optimización según criterios**: (Si la adjudicación por precio se basa en
+una fórmula) Menciona brevemente que la oferta económica se ha calculado para
+resultar competitiva. Por ejemplo: “Con esta oferta, la cooperativa presenta
+un **precio competitivo** que maximiza la puntuación en el criterio precio,
+conforme a la fórmula de adjudicación establecida [mencionar brevemente la
+fórmula, e.g. inversamente proporcional al precio].” Indica que pese a ser
+competitivo, el precio es técnicamente viable (para evitar dudas de baja
+temeraria, si procede).
+- **Validez de la oferta**: Incluye la afirmación de que la oferta económica
+tiene una validez mínima (según indique el pliego, típicamente 2 o 3 meses) y
+que se mantendrá durante ese periodo.
+ El estilo de este documento debe ser muy claro y directo. Se puede redactar
+como una breve carta o formulario, usando un tono formal. No debe extenderse
+mucho más allá de presentar los números y las aclaraciones mencionadas.
+Recuerda revisar que todos los importes estén correctos y que la oferta
+económica esté **firmada digitalmente por persona apoderada**, ya que errores
+en la firma o en los números podrían llevar a exclusión.
+
+
+{contenido}

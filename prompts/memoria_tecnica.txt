@@ -1,0 +1,31 @@
+ Elabora la **Memoria Técnica** de la oferta, enfocándote en los criterios que
+serán evaluados mediante **juicio de valor**. Utiliza la información del
+análisis para orientar el contenido. En particular, aborda los siguientes
+aspectos (correspondientes a los criterios subjetivos de adjudicación):
+ % **[Enumera la lista de criterios de juicio de valor extraídos del
+pliego, estos están en el apartado criterios de adjudicación, y dentro de este en criterios de calidad].**
+ Para cada criterio mencionado, redacta un apartado de la memoria técnica que
+incluya:
+- **Título del apartado** correspondiente al criterio (por ej. “Propuesta
+metodológica” o “Plan de mejoras e innovación”).
+- **Descripción detallada** de cómo la cooperativa cumple y supera las
+exigencias de ese criterio. Por ejemplo, si se trata de metodología: detalla
+la metodología propuesta, cronograma, herramientas y enfoques pedagógicos/
+ técnicos específicos que se aplicarán, asegurando que responden a lo pedido
+en el PPT. Si es sobre experiencia del equipo: presenta al equipo de la
+cooperativa, su cualificación y casos de éxito anteriores similares al objeto
+del contrato.
+- **Valor añadido**: destaca cualquier elemento innovador o mejora que la
+cooperativa ofrezca en ese ámbito y que pueda darle la máxima puntuación.
+Esto puede incluir soluciones creativas, mejores prácticas, certificaciones
+de calidad, etc., según corresponda a cada criterio.
+- **Estructura clara**: usa viñetas o subpárrafos si es necesario para
+organizar la información, facilitando la lectura al evaluador.
+Asegúrate de que el tono sea técnico pero comprensible, mostrando seguridad y
+competencia. La extensión de cada apartado puede variar (varios párrafos si
+hace falta), pero mantén un lenguaje conciso y focalizado en cómo se
+satisfacen los criterios del pliego. Al final de la memoria técnica, puedes
+añadir una breve conclusión reiterando la disponibilidad de la cooperativa
+para ejecutar el contrato con excelencia.
+
+{contenido}

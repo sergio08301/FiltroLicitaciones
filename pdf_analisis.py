@@ -8,12 +8,50 @@ import fitz  # PyMuPDF
 from dotenv import load_dotenv
 import json
 from openai import OpenAI
-
+import json
+from pathlib import Path
 # Cargar variables de entorno
 load_dotenv()
 
 # Inicializar cliente de OpenAI
 client = OpenAI()
+
+# Ruta al archivo de consumo
+CONSUMO_FILE = Path(__file__).parent / "consumo_tokens.json"
+
+# Precio aproximado para gpt-4o-mini (input + output)
+PRECIO_POR_1K_TOKENS = 0.00075  # $0.00075 por 1K tokens
+
+# Contador global
+token_usage = {"prompt": 0, "completion": 0, "total": 0, "usd": 0.0}
+
+# Cargar consumo previo si existe
+if CONSUMO_FILE.exists():
+    with open(CONSUMO_FILE, "r") as f:
+        token_usage.update(json.load(f))
+
+
+def guardar_consumo():
+    """Guarda el consumo acumulado en un JSON"""
+    with open(CONSUMO_FILE, "w") as f:
+        json.dump(token_usage, f, indent=2)
+    print(f"💾 Consumo guardado: {token_usage['total']} tokens, ${token_usage['usd']:.4f}")
+
+
+def registrar_consumo(usage):
+    """Actualiza el contador de tokens"""
+    prompt = usage.prompt_tokens or 0
+    completion = usage.completion_tokens or 0
+    total = usage.total_tokens or (prompt + completion)
+    usd = (total / 1000) * PRECIO_POR_1K_TOKENS
+
+    token_usage["prompt"] += prompt
+    token_usage["completion"] += completion
+    token_usage["total"] += total
+    token_usage["usd"] += usd
+
+    print(f"📊 +{total} tokens ({prompt} prompt + {completion} completion) — 💲 ${usd:.4f}")
+    print(f"📦 Total acumulado: {token_usage['total']} tokens, 💲 ${token_usage['usd']:.4f}")
 
 def cargar_prompts_desde_txt(ruta_carpeta="prompts") -> dict:
     prompts = {}
@@ -60,7 +98,6 @@ def leer_contenido_pdf(rutas_pdf: list[str]) -> str:
     return contenido.strip()
 
 def openAIRequest(licitacion, tipo_prompt, prompts) -> str:
-
     # Coge el archivo necesario para lo que quiere hacer
     if tipo_prompt == "requisitos_tecnicos":
         contenido = leer_contenido_pdf([licitacion.GetPDFTecnico()])
@@ -80,13 +117,24 @@ def openAIRequest(licitacion, tipo_prompt, prompts) -> str:
                 contenido = f"--- ADMINISTRATIVO ---\n{contenido_admin}\n\n--- TECNICO ---\n{contenido_tec}"
         except Exception as e:
             return f"❌ Error al leer los archivos de resumen: {e}"
+    elif tipo_prompt in ["introduccion", "memoria_tecnica", "social_medioambiental", "propuesta_economica", "administrativa_solvencia"]:
+        ruta_sintesis = licitacion.GetSintesisRequisitos()
+        if not (ruta_sintesis and os.path.exists(ruta_sintesis)):
+            return "❌ No se encontró la síntesis previa necesaria para este documento."
+        try:
+            with open(ruta_sintesis, "r", encoding="utf-8") as f:
+                contenido = f.read().strip()
+        except Exception as e:
+            return f"❌ Error al leer el archivo de síntesis: {e}"
     else:
         raise ValueError("Tipo de prompt no válido")
 
     if not contenido:
         return "❌ No se pudo extraer texto útil de los PDFs."
 
-    fragmentos = dividir_contenido(contenido, max_longitud=15000)
+    tokens_max = 120000  # GPT-4o-mini soporta hasta 128k tokens
+    caracter_max = tokens_max * 4  # ≈ 480k caracteres
+    fragmentos = dividir_contenido(contenido, max_longitud=caracter_max)
 
     subresultados = []
     print(f"📄 Fragmentando documento en {len(fragmentos)} partes...")
@@ -108,15 +156,18 @@ def openAIRequest(licitacion, tipo_prompt, prompts) -> str:
             )
             print(f"🔹 Enviando fragmento {i + 1}/{len(fragmentos)}...")
 
-
             for intento in range(MAX_RETRIES):
                 try:
                     response = client.chat.completions.create(
-                        model="gpt-4",
+                        model="gpt-4o-mini",
                         messages=[{"role": "user", "content": prompt}],
                         temperature=0.3,
                         max_tokens=1500
                     )
+                    if hasattr(response, "usage"):
+                        registrar_consumo(response.usage)
+                    else:
+                        print("⚠️ No se recibió información de uso de tokens.")
                     subresultados.append(response.choices[0].message.content.strip())
                     break
                 except Exception as e:
@@ -131,7 +182,7 @@ def openAIRequest(licitacion, tipo_prompt, prompts) -> str:
 
         print("🧠 Generando análisis final estructurado...")
         resumen_total = "\n\n---\n\n".join(subresultados)
-        MAX_PROMPT_CHARS = 20000
+        MAX_PROMPT_CHARS = 18000
 
         if len(resumen_total) <= MAX_PROMPT_CHARS:
             print("✅ Juntando directamente todos los subresultados en una sola síntesis final.")
@@ -154,11 +205,15 @@ def openAIRequest(licitacion, tipo_prompt, prompts) -> str:
                 for intento in range(MAX_RETRIES):
                     try:
                         response = client.chat.completions.create(
-                            model="gpt-4",
+                            model="gpt-4o-mini",
                             messages=[{"role": "user", "content": prompt_completo}],
                             temperature=0.3,
                             max_tokens=2000
                         )
+                        if hasattr(response, "usage"):
+                            registrar_consumo(response.usage)
+                        else:
+                            print("⚠️ No se recibió información de uso de tokens.")
                         resumenes_intermedios.append(response.choices[0].message.content.strip())
                         break
                     except Exception as e:
@@ -182,11 +237,15 @@ def openAIRequest(licitacion, tipo_prompt, prompts) -> str:
     for intento in range(MAX_RETRIES):
         try:
             final_response = client.chat.completions.create(
-                model="gpt-4",
+                model="gpt-4o-mini",
                 messages=[{"role": "user", "content": final_prompt}],
                 temperature=0.3,
                 max_tokens=3000
             )
+            if hasattr(final_response, "usage"):
+                registrar_consumo(final_response.usage)
+            else:
+                print("⚠️ No se recibió información de uso de tokens.")
             return final_response.choices[0].message.content.strip()
         except Exception as e:
             print(f"⚠️ Error en intento final {intento + 1}/3: {e}")
@@ -196,7 +255,6 @@ def openAIRequest(licitacion, tipo_prompt, prompts) -> str:
                 time.sleep(wait)
             else:
                 return f"❌ Error durante la síntesis final: {e}"
-
 
 def extraer_titulos_filtrados(texto):
     lineas = texto.splitlines()
@@ -223,11 +281,15 @@ def filtrar_por_tematicas(lista_licitaciones, prompts):
 
     try:
         response = client.chat.completions.create(
-            model="gpt-4",
+            model="gpt-4o-mini",
             messages=[{"role": "user", "content": prompt}],
             temperature=0.2,
             max_tokens=1500
         )
+        if response.usage:
+            registrar_consumo(response.usage)
+        else:
+            print("⚠️ No se recibió información de uso de tokens.")
         texto_respuesta = response.choices[0].message.content.strip()
     except Exception as e:
         print(f"❌ Error al filtrar por temática: {e}")

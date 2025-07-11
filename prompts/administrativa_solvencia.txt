@@ -1,0 +1,41 @@
+ Prepara un **listado de la documentación administrativa** y de solvencia que
+la cooperativa debe presentar (normalmente en el Sobre 1). Para cada
+elemento, proporciona una breve descripción o el contenido requerido, de
+acuerdo con las exigencias del pliego. Incluye:
+- **Formulario de oferta o modelo oficial**: (Si el pliego provee un modelo
+de proposición, p. ej. Anexo, indícalo) – ej. “Modelo de proposición
+económica firmado digitalmente, conforme al Anexo X del PCAP.”
+- **Declaración responsable**: confirmando el cumplimiento de requisitos
+generales (art. 140 LCSP), firmada por el representante legal. Menciona que
+incluye que no hay prohibiciones para contratar, estar al corriente de
+obligaciones tributarias y de la SS, etc., según el pliego.
+- **Documentos de solvencia económica**: según se haya exigido en el pliego,
+detalla qué se presenta. Por ejemplo, “Cuentas anuales de 20XX y 20XY
+depositadas en el Registro (para acreditar volumen de negocio de al menos X
+€)”, o “Seguro de responsabilidad civil vigente por X € (cobertura mínima
+requerida)”, etc.
+- **Documentos de solvencia técnica**: detalla las
+**pruebas de experiencia o capacidad técnica** que pide el pliego. Por
+ejemplo, “Relación de servicios realizados en los últimos 3 años similares al
+objeto del contrato, indicando importes, fechas y destinatarios
+(administraciones). Se aportan certificados de buena ejecución de
+[número] servicios que cumplen los requisitos.” O bien, “CV del personal
+clave propuesto, mostrando titulaciones y experiencia exigida”, “Declaración
+de equipo y medios disponibles”, u otros según el caso.
+- **Certificados y otras pruebas**: incluye aquí cualquier otro documento
+exigido: certificados de calidad (ISO), acreditaciones específicas,
+certificados de estar al corriente de Hacienda y Seguridad Social (si no se
+obtienen de oficio), poderes de representación de quien firma la oferta, DNI/
+ NIF del representante, etc.
+ - **Garantía provisional**: (solo si se exigiera, aunque en servicios suele
+no pedirse) – indicar si se adjunta resguardo de constitución de garantía.  - **Cualquier otro**: por ejemplo, si la licitación lo requiere, “Compromiso
+de constituir UTE”, “Compromiso de adscribir medios de terceros (con
+documentos de compromiso firmados)”, etc., según corresponda.
+ Presenta esta lista de forma ordenada (puede ser numerada o con viñetas) para
+usarla como **checklist final**. Antes de la presentación, la cooperativa
+debe verificar uno por uno que todos estos documentos están preparados y
+correctamente **firmados**. Cada documento debe incluirse en el sobre/
+ archivo indicado (administrativo), tal como lo hayas listado.
+
+
+ {contenido}
