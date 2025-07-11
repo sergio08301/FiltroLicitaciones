@@ -28,6 +28,7 @@ etc.).
 - **No uses frases como "no se especifica", "no aparece", "no indicado", etc.**
 - No completes con intuiciones: usa únicamente el texto proporcionado.
 - Sé claro y conciso, sin explicaciones extra.
+- Organiza el contenido en apartados. Cada título de apartado debe estar en mayúsculas y separado del texto por una línea vacía.
 
 ✅ **Ejemplo de formato**:
 - Descripción detallada del objeto del contrato: [texto]

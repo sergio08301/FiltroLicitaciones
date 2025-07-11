@@ -29,6 +29,6 @@ párrafos sólidos, enfatizando que la cooperativa **entiende la importancia
 estratégica** de estos criterios y asegura su cumplimiento efectivo (lo cual
 también cumple con la normativa vigente que promueve criterios sociales y
 medioambientales en la contratación).
-
+Organiza el contenido en apartados. Cada título de apartado debe estar en mayúsculas y separado del texto por una línea vacía.
 
 {contenido}

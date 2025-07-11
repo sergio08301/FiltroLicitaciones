@@ -41,6 +41,7 @@ de preguntas, etc.).
 - Sé claro y conciso, sin explicaciones extra.
 - En caso de no encontrar ninguna fecha que añadir al apartado de fechas clave, di: "{fecha} es la fecha límite
  para la presentación de la oferta".
+- Organiza el contenido en apartados. Cada título de apartado debe estar en mayúsculas y separado del texto por una línea vacía.
 
 ✅ **Ejemplo de formato**:
 - Objeto del contrato: [texto]

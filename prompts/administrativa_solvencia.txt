@@ -28,7 +28,8 @@ certificados de estar al corriente de Hacienda y Seguridad Social (si no se
 obtienen de oficio), poderes de representación de quien firma la oferta, DNI/
  NIF del representante, etc.
  - **Garantía provisional**: (solo si se exigiera, aunque en servicios suele
-no pedirse) – indicar si se adjunta resguardo de constitución de garantía.  - **Cualquier otro**: por ejemplo, si la licitación lo requiere, “Compromiso
+no pedirse) – indicar si se adjunta resguardo de constitución de garantía.
+- **Cualquier otro**: por ejemplo, si la licitación lo requiere, “Compromiso
 de constituir UTE”, “Compromiso de adscribir medios de terceros (con
 documentos de compromiso firmados)”, etc., según corresponda.
  Presenta esta lista de forma ordenada (puede ser numerada o con viñetas) para
@@ -36,6 +37,7 @@ usarla como **checklist final**. Antes de la presentación, la cooperativa
 debe verificar uno por uno que todos estos documentos están preparados y
 correctamente **firmados**. Cada documento debe incluirse en el sobre/
  archivo indicado (administrativo), tal como lo hayas listado.
+ Organiza el contenido en apartados. Cada título de apartado debe estar en mayúsculas y separado del texto por una línea vacía.
 
 
  {contenido}

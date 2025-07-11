@@ -1,0 +1,24 @@
+- **DATOS GENERALES**: El objeto del contrato es la adjudicación del Servicio de aseguramiento de Responsabilidad Civil General y Profesional del Hospital Intermutual de Levante (HIL). El organismo convocante es el Hospital Intermutual de Levante. La referencia de la licitación no se especifica. El presupuesto base de licitación es de 200.000€ (sin IVA, IVA exento), y el valor estimado del contrato, incluyendo posibles prórrogas y modificaciones, es de 840.000€. La duración del contrato es de un año, comenzando desde el 1 de septiembre de 2025 o desde la fecha de firma del contrato, si esta es posterior, con tres prórrogas de un año cada una. La presentación de ofertas se realizará a través de la Plataforma de Contratación del Sector Público, y la fecha límite para la presentación de la oferta es el 07/07/2025 a las 14:00:00h.
+
+- **REQUISITOS DE PARTICIPACIÓN**: Se exige una solvencia económica con una cifra anual de negocios mínima de 1.260.000€ (1.5 veces el valor estimado del contrato), acreditada mediante cuentas anuales aprobadas y depositadas en el Registro Mercantil o libros de inventarios y cuentas anuales legalizados. La solvencia técnica requiere una relación de servicios realizados en los últimos 5 años con un importe anual acumulado mínimo de 588.000€, acreditada mediante certificados de buena ejecución. Además, los licitadores deben estar habilitados como entidades aseguradoras y cumplir con los requisitos legales para actuar como corredor de seguros según el Real Decreto-ley 3/2020. Se debe estar al corriente de obligaciones y tener inscripciones en registros pertinentes.
+
+- **CRITERIOS DE ADJUDICACIÓN**: 
+  - **Criterios de calidad (juicio de valor)**: 
+    - Oferta técnica: Hasta 40 puntos, desglosados en:
+      - Incremento de límites: hasta 30 puntos.
+      - Eliminación cláusula de exceso: hasta 5 puntos.
+      - Eliminación exclusiones: hasta 5 puntos.
+  - **Criterios automáticos**: 
+    - Oferta económica: Hasta 60 puntos, con fórmula para la puntuación del precio establecida en el pliego.
+
+- **OBLIGACIONES DEL CONTRATO**: Se garantiza el uso no sexista del lenguaje en todos los documentos emitidos durante la ejecución del contrato. El adjudicatario deberá entregar informes trimestrales sobre la situación de las reclamaciones tramitadas y garantizar la defensa del asegurado en procedimientos judiciales relacionados con siniestros cubiertos por la póliza. Se establece un límite de indemnización por siniestro de 3.000.000 € y se menciona la obligación de mantener la confidencialidad de los datos proporcionados al asegurador.
+
+- **DOCUMENTACIÓN Y FORMA DE PRESENTACIÓN**: 
+  - **Sobre administrativo**: DEUC, certificado de inscripción en el ROLECE, declaraciones responsables (múltiple, de datos personales, de seguro de responsabilidad civil), compromiso de constitución en UTE si aplica.
+  - **Sobre técnico**: Documentación técnica según el pliego.
+  - **Sobre económico**: Oferta económica y criterios evaluables automáticamente.
+  - La presentación de las ofertas será electrónica a través de la Plataforma de Contratación del Sector Público, siguiendo las instrucciones del pliego.
+
+- **NORMATIVA APLICABLE**: Ley 9/2017 de Contratos del Sector Público (LCSP) y otras normas específicas mencionadas en el pliego.
+
+- **FECHAS CLAVE**: La fecha límite para la presentación de la oferta es el 07/07/2025 a las 14:00:00h. Las fechas de apertura de sobres se publicarán en la plataforma. El plazo de ejecución es de un año, comenzando desde el 1 de septiembre de 2025 o desde la fecha de firma del contrato, si esta es posterior.

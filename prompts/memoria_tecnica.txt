@@ -27,5 +27,6 @@ hace falta), pero mantén un lenguaje conciso y focalizado en cómo se
 satisfacen los criterios del pliego. Al final de la memoria técnica, puedes
 añadir una breve conclusión reiterando la disponibilidad de la cooperativa
 para ejecutar el contrato con excelencia.
+Organiza el contenido en apartados. Cada título de apartado debe estar en mayúsculas y separado del texto por una línea vacía.
 
 {contenido}

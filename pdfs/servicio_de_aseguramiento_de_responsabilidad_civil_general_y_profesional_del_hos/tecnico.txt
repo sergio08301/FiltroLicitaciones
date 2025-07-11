@@ -1,0 +1,9 @@
+- **DESCRIPCIÓN DETALLADA DEL OBJETO DEL CONTRATO**: El objeto del contrato es la contratación de una póliza de seguro de Responsabilidad Civil para el Hospital Intermutual de Levante (HIL). Esta póliza garantizará las consecuencias económicas derivadas de daños y perjuicios causados involuntariamente a clientes o terceros por hechos relacionados con la actividad del hospital, conforme a la normativa vigente.
+
+- **REQUISITOS TÉCNICOS OBLIGATORIOS**: Los licitadores deben estar habilitados como entidades aseguradoras y autorizados por la Dirección General de Seguros y Fondos de Pensiones. El incumplimiento de este requisito conlleva la exclusión de la licitación.
+
+- **CRITERIOS TÉCNICOS EVALUABLES**: La memoria técnica presentada por los licitadores debe cumplir con lo dispuesto en la cláusula 12ª del PCAP, aunque se permite ampliar la información para detallar los valores contemplados en el pliego. La eliminación de ciertas exclusiones en las coberturas puede ser objeto de puntuación.
+
+- **OBLIGACIONES DURANTE LA EJECUCIÓN**: El adjudicatario deberá entregar informes trimestrales al Hospital sobre la situación de las reclamaciones tramitadas. Además, se garantizará la defensa del asegurado en procedimientos judiciales relacionados con siniestros cubiertos por la póliza, así como la constitución de fianzas exigidas.
+
+- **OTRAS ACLARACIONES O ANEXOS TÉCNICOS**: Se especifican límites asegurados por siniestro y anualidad, así como exclusiones específicas de la cobertura. Se establece un límite de indemnización por siniestro de 3.000.000 € y otros límites para diferentes tipos de responsabilidad. También se menciona la obligación de mantener la confidencialidad de los datos proporcionados al asegurador.

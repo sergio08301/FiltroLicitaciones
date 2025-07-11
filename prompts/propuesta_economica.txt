@@ -33,6 +33,7 @@ mucho más allá de presentar los números y las aclaraciones mencionadas.
 Recuerda revisar que todos los importes estén correctos y que la oferta
 económica esté **firmada digitalmente por persona apoderada**, ya que errores
 en la firma o en los números podrían llevar a exclusión.
+Organiza el contenido en apartados. Cada título de apartado debe estar en mayúsculas y separado del texto por una línea vacía.
 
 
 {contenido}

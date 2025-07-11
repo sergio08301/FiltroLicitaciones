@@ -1,0 +1,18 @@
+- **DATOS GENERALES**: El objeto del contrato es la prestación del servicio denominado “Asistencia técnica para la redacción del proyecto, dirección de obra y su coordinación en materia de seguridad y salud de las obras de adecuación y mejora de la carretera AL-5107”. El organismo convocante es el que gestiona la Agenda Urbana del Área Funcional del Levante Almeriense. La referencia de la licitación no se especifica. El presupuesto base de licitación es de 127.500,00 € (IVA incluido) y el valor estimado es de 105.371,90 € (IVA excluido). La duración del contrato se detalla en el Anexo I y no se prevén prórrogas. La presentación de ofertas se realizará a través de la Plataforma de Contratación del Sector Público, y la fecha límite para la presentación es el 07/07/2025 a las 23:59:00h.
+
+- **REQUISITOS DE PARTICIPACIÓN**: Los licitadores deben acreditar su solvencia económica y técnica mediante la presentación de la cifra anual de negocios de los últimos tres años y experiencia en trabajos similares, según se detalla en el Anexo III. Además, deben estar al corriente de obligaciones y cumplir con inscripciones en registros pertinentes.
+
+- **CRITERIOS DE ADJUDICACIÓN**: Los criterios de adjudicación se dividen en dos categorías: 
+  - **Criterios automáticos (54 puntos)**: El precio se valorará hasta un máximo de 40 puntos utilizando la fórmula: PBPO (%) = ((PBL-PO) / PBL) x 100. Se considerarán anormales las ofertas con un porcentaje de baja superior al 25% o a la media aritmética de las ofertas presentadas.
+  - **Criterios de calidad (46 puntos)**: Se evaluará la calidad técnica de los trabajos, la experiencia del equipo, la metodología propuesta y el cumplimiento de los plazos establecidos, así como mejoras en el diseño y ejecución del proyecto.
+
+- **OBLIGACIONES DEL CONTRATO**: Se requiere que el contratista tenga al menos un vehículo con “Etiqueta AMBIENTAL ECO” o “Etiqueta AMBIENTAL 0”. Durante la ejecución, el contratista debe presentar una programación de trabajos, informes mensuales de seguimiento de obras, y asegurar el cumplimiento de las condiciones de seguridad y salud laboral. También se deben realizar inspecciones periódicas de calidad de los materiales y de la ejecución de las obras. La no intervención de personal comprometido puede llevar a la resolución del contrato.
+
+- **DOCUMENTACIÓN Y FORMA DE PRESENTACIÓN**: La oferta debe incluir: 
+  - **Sobre A**: Documentación administrativa (DEUC, compromisos de unión temporal, declaración de no estar incurso en prohibiciones de contratar).
+  - **Sobre B**: Oferta técnica y documentación relacionada con criterios de juicio de valor.
+  - **Sobre C**: Proposición económica y oferta relativa a criterios evaluables mediante fórmulas. La presentación se realizará exclusivamente a través de la Plataforma de Contratación del Sector Público.
+
+- **NORMATIVA APLICABLE**: La normativa que rige el contrato es la Ley 9/2017, de 8 de noviembre, de Contratos del Sector Público (LCSP) y sus disposiciones de desarrollo.
+
+- **FECHAS CLAVE**: La fecha límite para la presentación de ofertas es el 07/07/2025 a las 23:59:00h. La fecha de apertura de sobres no se especifica. Se debe consultar el Anexo I para el plazo de ejecución y otras fechas relevantes, como visitas técnicas o período de preguntas.
