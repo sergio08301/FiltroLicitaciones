@@ -59,19 +59,9 @@ class Licitacion:
     def to_print(self):
         return f"""
         Empleador: {self._empleador}
-        LICITACIÓN: {self._titulo}
+        Título: {self._titulo}
         Enlace: {self._enlace}
         Publicada el: {self._fecha_publicacion}
         Fecha límite: {self._fecha_limite}
         Presupuesto: {self._presupuesto}
-        PDF Administrativo: {self._PDFAdministrativo}
-        PDF Técnico: {self._PDFTecnico}
-        Resumen Administrativo: {self._ResumenAdministrativo}
-        Resumen Técnico: {self._ResumenTecnico}
-        Síntesis Requisitos: {self._SintesisRequisitos}
-        Introducción Oferta: {self._IntroduccionOferta}
-        Memoria Técnica: {self._MemoriaTecnica}
-        Criterios Sociales y Medioambientales: {self._CriteriosSocialesMedioambientales}
-        Propuesta Económica: {self._PropuestaEconomica}
-        Documentación Administrativa y Solvencia: {self._DocumentacionAdministrativaSolvencia}
         """

@@ -521,6 +521,87 @@ def silenciar_prints(func, *args, **kwargs):
         sys.stdout = original_stdout  # Restaura salida normal
     return result
 
+def eliminar_licitaciones(csv_path="licitaciones.csv"):
+    if not os.path.exists(csv_path):
+        print("❌ No se encontró el archivo CSV.")
+        return
+
+    licitaciones = cargar_licitaciones_csv(csv_path)
+    if not licitaciones:
+        print("⚠️ No hay licitaciones en el archivo CSV.")
+        return
+
+    while True:
+        print("\n📋 Licitaciones actuales en el archivo:")
+        for idx, lic in enumerate(licitaciones, start=1):
+            print(f"{idx}. {lic.GetTitulo()}")
+
+        seleccion = input(
+            "\nEscribe el número de la licitación a gestionar (o 'all' para gestionar todas, o 'q' para salir): "
+        ).strip().lower()
+
+        if seleccion == "q":
+            print("❌ Operación cancelada.")
+            return
+
+        if seleccion == "all":
+            indices_a_gestionar = list(range(len(licitaciones)))
+        else:
+            try:
+                indices_a_gestionar = [int(i) - 1 for i in seleccion.split(",") if i.strip().isdigit()]
+                indices_a_gestionar = [i for i in indices_a_gestionar if 0 <= i < len(licitaciones)]
+            except ValueError:
+                print("⚠️ Entrada no válida.")
+                continue
+
+            if not indices_a_gestionar:
+                print("⚠️ No se seleccionó ninguna licitación válida.")
+                continue
+
+        nuevas_licitaciones = licitaciones.copy()
+        for idx in sorted(indices_a_gestionar, reverse=True):
+            lic = licitaciones[idx]
+            print("\n📝 Detalle de la licitación seleccionada:")
+            print(lic.to_print())
+
+            accion = input(
+                "\n¿Qué quieres hacer con esta licitación?\n"
+                "1️⃣ Eliminar del CSV\n"
+                "2️⃣ Resetear campos y borrar archivos de la carpeta\n"
+                "3️⃣ Omitir (no hacer nada)\n"
+                "Selecciona (1/2/3): "
+            ).strip()
+
+            if accion == "1":
+                print("uno")
+
+            elif accion == "2":
+                # Resetear campos de documentos/resúmenes
+                print(f"🔄 Reseteando campos y borrando archivos de: {lic.GetTitulo()}")
+                lic.SetPDFAdministrativo("")
+                lic.SetPDFTecnico("")
+                lic.SetResumenAdministrativo("")
+                lic.SetResumenTecnico("")
+                lic.SetSintesisRequisitos("")
+                lic.SetIntroduccionOferta("")
+                lic.SetMemoriaTecnica("")
+                lic.SetCriteriosSocialesMedioambientales("")
+                lic.SetPropuestaEconomica("")
+                lic.SetDocumentacionAdministrativaSolvencia("")
+
+
+            elif accion == "3":
+                print("⏭️ Se omite esta licitación.")
+                continue
+            else:
+                print("⚠️ Opción no válida. Se omite esta licitación.")
+
+        guardar_licitaciones_csv(nuevas_licitaciones, csv_path)
+        print(f"✅ CSV actualizado: {len(nuevas_licitaciones)} licitaciones restantes.")
+
+        continuar = input("\n¿Quieres gestionar más licitaciones? (y/n): ").strip().lower()
+        if continuar != "y":
+            break
 
 def guardar_licitaciones_csv_con_check(licitaciones, ruta_archivo="licitaciones.csv"):
     ruta = Path(ruta_archivo)
@@ -560,7 +641,7 @@ def main():
     licitaciones_guardadas = []
 
     respuesta = input(
-        "¿Quieres buscar nuevas licitaciones (1) o trabajar con las que ya tienes en tu archivo (2)? (1/2): ").strip().lower()
+        "¿Quieres editar las selección de licitaciones (1) o trabajar con las que ya tienes en tu archivo (2)? (1/2): ").strip().lower()
 
     if respuesta == "2" and not os.path.exists(csv_path):
         print(f" Genera antes un archivo con las licitaciones con las cuales quieres trabajar")
@@ -675,54 +756,62 @@ def main():
         )
 
     elif respuesta == "1":
-        print(" Se descargarán desde el correo las licitaciones que se adecuen.")
 
-        # Encontrar el correo
-        mail = connect_to_email()
-        mensaje = buscar_correo_por_asunto(mail)
-        mail.logout()
-        if not mensaje:
-            print("❌ No se encontró ningún correo reciente con ese asunto.")
-            return
-        # Convertir las licitaciones del correo en objetos licitacion
-        html = extraer_html_del_mensaje(mensaje)
-        if not html:
-            print("⚠️ No se pudo extraer HTML del correo.")
-            return
+        decision = input(
+            "¿Seleccionar nuevas licitaciones en el correo (1) o editar las seleccionadas (2)? (1/2): ").strip().lower()
 
-        licitaciones_extraidas = extraer_licitaciones_desde_html(html)
-        print(f"\n📋 Se detectaron {len(licitaciones_extraidas)} licitaciones del correo")
+        if decision=="1":
+            print(" Se descargarán las licitaciones desde tu correo")
 
-        respuesta = input(
-            "¿Quieres que se escoja automáticamente las licitaciones que te interesan mediante las características definidas (1) o quieres escoger a mano (2)? (1/2): "
-        ).strip()
-
-        if respuesta == "1":
-            licitaciones_filtradas = filtrado_inicial(licitaciones_extraidas)
-            prompts = cargar_prompts_desde_txt()
-            print(
-                f"\n📋 Se conservan {len(licitaciones_filtradas)} licitaciones después del primer filtrado (precios y fechas)")
-            licitaciones_filtradas = filtrar_por_tematicas(licitaciones_filtradas, prompts)
-            print(
-                f"\n📋 Se conservan {len(licitaciones_filtradas)} licitaciones después del segundo filtrado (temáticas)")
-
-            guardar_licitaciones_csv_con_check(licitaciones_filtradas, csv_path)
-            print(f"✅ Datos actualizados en {csv_path}")
-
-            for lic in licitaciones_filtradas:
-                print(f"✅ {lic.GetTitulo()}")
-
-            respuesta = input("¿Quieres escoger manualmente alguna más? (y/n): ").strip().lower()
-            if respuesta == "y":
-                seleccionar_licitaciones_manualmente(licitaciones_extraidas, csv_path)
-            else:
-                print("👋 Proceso completado.")
-                guardar_licitaciones_csv(licitaciones_filtradas, csv_path)
+            # Encontrar el correo
+            mail = connect_to_email()
+            mensaje = buscar_correo_por_asunto(mail)
+            mail.logout()
+            if not mensaje:
+                print("❌ No se encontró ningún correo reciente con ese asunto.")
+                return
+            # Convertir las licitaciones del correo en objetos licitacion
+            html = extraer_html_del_mensaje(mensaje)
+            if not html:
+                print("⚠️ No se pudo extraer HTML del correo.")
                 return
 
-        elif respuesta == "2":
-            seleccionar_licitaciones_manualmente(licitaciones_extraidas, csv_path)
+            licitaciones_extraidas = extraer_licitaciones_desde_html(html)
+            print(f"\n📋 Se detectaron {len(licitaciones_extraidas)} licitaciones del correo")
 
+            respuesta = input(
+                "¿Quieres que se escoja automáticamente las licitaciones que te interesan mediante las características definidas (1) o quieres escoger a mano (2)? (1/2): "
+            ).strip()
+
+            if respuesta == "1":
+                licitaciones_filtradas = filtrado_inicial(licitaciones_extraidas)
+                prompts = cargar_prompts_desde_txt()
+                print(
+                    f"\n📋 Se conservan {len(licitaciones_filtradas)} licitaciones después del primer filtrado (precios y fechas)")
+                licitaciones_filtradas = filtrar_por_tematicas(licitaciones_filtradas, prompts)
+                print(
+                    f"\n📋 Se conservan {len(licitaciones_filtradas)} licitaciones después del segundo filtrado (temáticas)")
+
+                guardar_licitaciones_csv_con_check(licitaciones_filtradas, csv_path)
+                print(f"✅ Datos actualizados en {csv_path}")
+
+                for lic in licitaciones_filtradas:
+                    print(f"✅ {lic.GetTitulo()}")
+
+                respuesta = input("¿Quieres escoger manualmente alguna más? (y/n): ").strip().lower()
+                if respuesta == "y":
+                    seleccionar_licitaciones_manualmente(licitaciones_extraidas, csv_path)
+                else:
+                    print("👋 Proceso completado.")
+                    guardar_licitaciones_csv(licitaciones_filtradas, csv_path)
+                    return
+            elif respuesta == "2":
+                seleccionar_licitaciones_manualmente(licitaciones_extraidas, csv_path)
+            else:
+                print("⚠️ Opción no reconocida. Cancelando.")
+
+        elif decision=="2":
+            eliminar_licitaciones(csv_path)
         else:
             print("⚠️ Opción no reconocida. Cancelando.")
     else:
