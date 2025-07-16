@@ -174,6 +174,7 @@ def filtrado_inicial(licitaciones: list) -> list:
             dias_restantes = (fecha_limite - hoy).days
             if dias_restantes < diasLimite:
                 print(f" ❌ DESCARTADA por fecha: {lic.GetTitulo()} (quedan {dias_restantes} días)")
+                time.sleep(0.2)
                 continue
         except Exception:
             print(f"⚠️ DESCARTADA por fecha inválida: {lic.GetTitulo()} ({fecha_limite_str})")
@@ -209,6 +210,7 @@ def descargar_pdfs_por_href(licitacion, carpeta_base="documentacion"):
     import logging
     import os
     import time
+    import sys
     import requests
     from selenium import webdriver
     from selenium.webdriver.common.by import By
@@ -216,25 +218,33 @@ def descargar_pdfs_por_href(licitacion, carpeta_base="documentacion"):
     from selenium.webdriver.chrome.options import Options
     from webdriver_manager.chrome import ChromeDriverManager
 
+    # 👇 Silenciar logs de Selenium en Python
     logging.getLogger('selenium').setLevel(logging.CRITICAL)
+
     url = licitacion.GetEnlace()
     titulo = licitacion.GetTitulo()
     carpeta_licitacion = os.path.join(carpeta_base, limpiar_nombre(titulo))
     os.makedirs(carpeta_licitacion, exist_ok=True)
 
+    # 👇 Configuración de Chrome silenciosa
     chrome_options = Options()
     chrome_options.add_argument("--headless")
     chrome_options.add_argument("--disable-gpu")
     chrome_options.add_argument("--no-sandbox")
-    chrome_options.add_argument("--log-level=3")  # Oculta INFO/WARNING
+    chrome_options.add_argument("--log-level=3")  # Oculta INFO/WARNING de Chromium
+    chrome_options.add_argument("--disable-logging")  # Reduce mensajes extra
     chrome_options.add_experimental_option('excludeSwitches', ['enable-logging'])  # Silencia DevTools
 
+    # 👇 Servicio ChromeDriver sin logs
+    chromedriver_path = ChromeDriverManager().install()
     service = Service(
-        executable_path=ChromeDriverManager().install(),
-        log_path=os.devnull  # Redirige logs del driver a "la nada"
+        executable_path=chromedriver_path,
+        log_path=os.devnull  # Silencia logs de chromedriver.exe
     )
 
+    # 👇 Inicializa navegador
     driver = webdriver.Chrome(service=service, options=chrome_options)
+
     driver.get(url)
     time.sleep(3)  # permitir que cargue el DOM
 
@@ -278,7 +288,7 @@ def descargar_pdfs_por_href(licitacion, carpeta_base="documentacion"):
                             licitacion.SetPDFTecnico(destino)
 
                         if os.path.exists(destino):
-                            print(f" ❌ Ya existia: {destino}")
+                            print(f"❌ Ya existía: {destino}")
                             continue
                         try:
                             headers = {"User-Agent": "Mozilla/5.0"}
@@ -290,7 +300,7 @@ def descargar_pdfs_por_href(licitacion, carpeta_base="documentacion"):
                             actualizar_licitacion_en_csv(licitacion, csv_path)
                         except Exception as e:
                             print(f"❌ Error al descargar desde {href}: {e}")
-            except Exception as e:
+            except Exception:
                 continue
     finally:
         driver.quit()
