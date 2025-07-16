@@ -1,6 +1,5 @@
 import csv
 import email
-import sys
 from pathlib import Path
 from dotenv import load_dotenv
 import os
@@ -13,14 +12,11 @@ from bs4 import BeautifulSoup
 import requests
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 import shutil
 import time
 from pdf_analisis import openAIRequest, cargar_prompts_desde_txt, filtrar_por_tematicas, guardar_consumo
-from dataclasses import dataclass
 import sys
-import io
 
 # Configuración (Cargar variables de entorno (.env))
 load_dotenv()
@@ -573,7 +569,8 @@ def eliminar_licitaciones(csv_path="licitaciones.csv"):
             ).strip()
 
             if accion == "1":
-                print("uno")
+                print(f"🗑️ Eliminando {lic.GetTitulo()} del CSV...")
+                nuevas_licitaciones.pop(idx)
 
             elif accion == "2":
                 # Resetear campos de documentos/resúmenes
@@ -588,6 +585,18 @@ def eliminar_licitaciones(csv_path="licitaciones.csv"):
                 lic.SetCriteriosSocialesMedioambientales("")
                 lic.SetPropuestaEconomica("")
                 lic.SetDocumentacionAdministrativaSolvencia("")
+                carpeta = os.path.join("documentacion", limpiar_nombre(lic.GetTitulo()))
+                if os.path.exists(carpeta) and os.path.isdir(carpeta):
+                    for archivo in os.listdir(carpeta):
+                        ruta_archivo = os.path.join(carpeta, archivo)
+                        if os.path.isfile(ruta_archivo) and archivo.endswith((".pdf", ".txt")):
+                            try:
+                                os.remove(ruta_archivo)
+                                print(f"🗑️ Archivo eliminado: {ruta_archivo}")
+                            except Exception as e:
+                                print(f"⚠️ Error eliminando {ruta_archivo}: {e}")
+                else:
+                    print(f"⚠️ Carpeta no encontrada o no es una carpeta: {carpeta}")
 
 
             elif accion == "3":
@@ -597,7 +606,6 @@ def eliminar_licitaciones(csv_path="licitaciones.csv"):
                 print("⚠️ Opción no válida. Se omite esta licitación.")
 
         guardar_licitaciones_csv(nuevas_licitaciones, csv_path)
-        print(f"✅ CSV actualizado: {len(nuevas_licitaciones)} licitaciones restantes.")
 
         continuar = input("\n¿Quieres gestionar más licitaciones? (y/n): ").strip().lower()
         if continuar != "y":

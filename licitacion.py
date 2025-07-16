@@ -1,4 +1,3 @@
-import csv
 
 class Licitacion:
     def __init__(self, empleador, titulo, enlace, fecha_publicacion, fecha_limite, presupuesto):

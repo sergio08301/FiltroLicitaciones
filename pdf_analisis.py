@@ -1,13 +1,8 @@
-import os
 from openai import OpenAI
-import fitz  # PyMuPDF
 import time
 import os
-import re
 import fitz  # PyMuPDF
 from dotenv import load_dotenv
-import json
-import openai
 import json
 from pathlib import Path
 # Cargar variables de entorno
