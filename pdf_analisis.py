@@ -4,7 +4,11 @@ import os
 import fitz  # PyMuPDF
 from dotenv import load_dotenv
 import json
+import sys
 from pathlib import Path
+
+from main import base_dir
+
 # Cargar variables de entorno
 load_dotenv()
 
@@ -49,6 +53,11 @@ def registrar_consumo(usage):
     print(f"📦 Total acumulado: {token_usage['total']} tokens, 💲 ${token_usage['usd']:.4f}")
 
 def cargar_prompts_desde_txt(ruta_carpeta="prompts") -> dict:
+    if ruta_carpeta is None:
+        ruta_carpeta = os.path.join(base_dir, "prompts")
+    if not os.path.exists(ruta_carpeta):
+        print(f"❌ Carpeta de prompts no encontrada: {ruta_carpeta}")
+        sys.exit(1)
     prompts = {}
     for archivo in os.listdir(ruta_carpeta):
         if archivo.endswith(".txt"):
@@ -132,7 +141,7 @@ def openAIRequest(licitacion, tipo_prompt, prompts) -> str:
     fragmentos = dividir_contenido(contenido, max_longitud=caracter_max)
 
     subresultados = []
-    print(f"📄 Fragmentando documento en {len(fragmentos)} partes...")
+    if len(fragmentos) >1: print(f"📄 Fragmentando documento en {len(fragmentos)} partes...")
 
     MAX_RETRIES = 3
     WAIT_SECONDS = 5

@@ -13,20 +13,34 @@ import requests
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
+from webdriver_manager.chrome import ChromeDriverManager
 import shutil
 import time
-from pdf_analisis import openAIRequest, cargar_prompts_desde_txt, filtrar_por_tematicas, guardar_consumo
 import sys
 
+
 # Configuración (Cargar variables de entorno (.env))
-load_dotenv()
+# Detecta si estamos ejecutando desde el .exe (PyInstaller)
+if getattr(sys, 'frozen', False):
+    base_dir = sys._MEIPASS
+else:
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+
+dotenv_path = os.path.join(base_dir, ".env")
+
+if not os.path.exists(dotenv_path):
+    print("❌ Archivo .env no encontrado en la carpeta del ejecutable.")
+    sys.exit(1)
+
+load_dotenv(dotenv_path)
+
+
 dias = int(os.getenv("dias", 30))  # valor por defecto 30 si no está en .env
 presupuestoLimite = float(os.getenv("presupuestoLimite", 500000))
 diasLimite = int(os.getenv("diasLimite", 3))
 asunto = os.getenv("asunto", "Correu diari de subscriptors generals")
 colorEmpleador = os.getenv("colorEmpleador", "#660303")
 csv_path = os.getenv("csv_path", "licitaciones.csv")
-# ruta_csv = "licitaciones.csv"
 EMAIL_USER = os.getenv("EMAIL_USER")
 EMAIL_PASS = os.getenv("EMAIL_PASS")
 
@@ -192,6 +206,17 @@ def limpiar_nombre(texto):
 
 
 def descargar_pdfs_por_href(licitacion, carpeta_base="documentacion"):
+    import logging
+    import os
+    import time
+    import requests
+    from selenium import webdriver
+    from selenium.webdriver.common.by import By
+    from selenium.webdriver.chrome.service import Service
+    from selenium.webdriver.chrome.options import Options
+    from webdriver_manager.chrome import ChromeDriverManager
+
+    logging.getLogger('selenium').setLevel(logging.CRITICAL)
     url = licitacion.GetEnlace()
     titulo = licitacion.GetTitulo()
     carpeta_licitacion = os.path.join(carpeta_base, limpiar_nombre(titulo))
@@ -201,8 +226,15 @@ def descargar_pdfs_por_href(licitacion, carpeta_base="documentacion"):
     chrome_options.add_argument("--headless")
     chrome_options.add_argument("--disable-gpu")
     chrome_options.add_argument("--no-sandbox")
+    chrome_options.add_argument("--log-level=3")  # Oculta INFO/WARNING
+    chrome_options.add_experimental_option('excludeSwitches', ['enable-logging'])  # Silencia DevTools
 
-    driver = webdriver.Chrome(options=chrome_options)
+    service = Service(
+        executable_path=ChromeDriverManager().install(),
+        log_path=os.devnull  # Redirige logs del driver a "la nada"
+    )
+
+    driver = webdriver.Chrome(service=service, options=chrome_options)
     driver.get(url)
     time.sleep(3)  # permitir que cargue el DOM
 
@@ -457,6 +489,7 @@ def scrapping_de_pdfs(licitaciones):
         if lic.GetPDFAdministrativo() and os.path.exists(lic.GetPDFAdministrativo()) and \
                 lic.GetPDFTecnico() and os.path.exists(lic.GetPDFTecnico()):
             print(f" Ya existen los PDF para: {lic.GetTitulo()}")
+            time.sleep(1)
             continue
         try:
             descargar_pdfs_por_href(lic)
@@ -465,6 +498,7 @@ def scrapping_de_pdfs(licitaciones):
 
 
 def pedir_documentacion(lic, tipo):
+    from pdf_analisis import openAIRequest, cargar_prompts_desde_txt
     match tipo:
         case "administrativo":
             ruta = lic.GetResumenAdministrativo()
@@ -646,7 +680,7 @@ def guardar_licitaciones_csv_con_check(licitaciones, ruta_archivo="licitaciones.
 
 
 def main():
-    licitaciones_guardadas = []
+    from pdf_analisis import openAIRequest, cargar_prompts_desde_txt, filtrar_por_tematicas, guardar_consumo
 
     respuesta = input(
         "¿Quieres editar las selección de licitaciones (1) o trabajar con las que ya tienes en tu archivo (2)? (1/2): ").strip().lower()
@@ -663,16 +697,16 @@ def main():
                 📂 ¿Qué archivos quieres generar? (Introduce el número)
                 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-                  1️⃣  Generar todos los documentos
-                  2️⃣  Descargar los plecs administrativos y técnicos
-                  3️⃣  Resumir los plecs administrativos y técnicos
-                  4️⃣  Crear una síntesis de los requisitos
-                  5️⃣  Redactar la introducción de la oferta
-                  6️⃣  Elaborar la memoria técnica
-                  7️⃣  Desarrollar los criterios sociales y medioambientales
-                  8️⃣  Preparar la propuesta económica
-                  9️⃣  Compilar documentación administrativa y de solvencia
-                 🔟  Salir del programa
+                  1)  Generar todos los documentos
+                  2)  Descargar los plecs administrativos y técnicos
+                  3)  Resumir los plecs administrativos y técnicos
+                  4)  Crear una síntesis de los requisitos
+                  5)  Redactar la introducción de la oferta
+                  6)  Elaborar la memoria técnica
+                  7)  Desarrollar los criterios sociales y medioambientales
+                  8)  Preparar la propuesta económica
+                  9)  Compilar documentación administrativa y de solvencia
+                  10) Salir del programa
 
                 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
                 """)
@@ -828,4 +862,14 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:
+        import traceback
+        with open("error.log", "w") as f:
+            traceback.print_exc(file=f)
+        print("❌ Ocurrió un error. Revisa error.log para más detalles.")
+        input("❌ Presiona ENTER para cerrar...")
+    else:
+        print("\n✅ Ejecución terminada correctamente.")
+        input("Presiona ENTER para cerrar...")
